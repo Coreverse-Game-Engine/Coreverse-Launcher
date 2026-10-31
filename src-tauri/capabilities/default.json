@@ -3,5 +3,17 @@
     "identifier": "default",
     "description": "Default permissions of the main window",
     "windows": ["main"],
-    "permissions": ["core:default"]
+    "permissions": [
+        "core:default",
+        "deep-link:default",
+        "opener:default",
+        {
+            "identifier": "http:default",
+            "allow": [
+                { "url": "https://*.supabase.co/functions/v1/*" },
+                { "url": "http://127.0.0.1:54321/functions/v1/*" },
+                { "url": "http://localhost:54321/functions/v1/*" }
+            ]
+        }
+    ]
 }

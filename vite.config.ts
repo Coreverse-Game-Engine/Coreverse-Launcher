@@ -10,6 +10,8 @@ export default defineConfig({
     resolve: {
         alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
     },
+    // Expose `PUBLIC_*` too, so `.env.local` uses the same variable names as Coreverse-DB.
+    envPrefix: ["VITE_", "PUBLIC_"],
     // Keep Rust compiler messages visible in the terminal.
     clearScreen: false,
     server: {

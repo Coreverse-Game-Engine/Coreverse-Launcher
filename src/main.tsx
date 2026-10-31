@@ -6,12 +6,16 @@ import "./i18n";
 import "./index.css";
 
 import { App } from "@/App";
+import { AuthProvider } from "@/components/auth-provider";
 import { SettingsBridge } from "@/components/settings-bridge";
 import { ThemeProvider } from "@/components/theme-provider";
+import { configureDb } from "@/lib/db";
 import { applyTheme, readStoredTheme } from "@/lib/theme";
 
 // Apply the saved theme before the first render so there is no flash of the wrong theme.
 applyTheme(readStoredTheme());
+
+configureDb();
 
 const container = document.getElementById("root");
 if (!container) {
@@ -22,9 +26,11 @@ createRoot(container).render(
     <StrictMode>
         <ThemeProvider>
             <SettingsBridge />
-            <HashRouter>
-                <App />
-            </HashRouter>
+            <AuthProvider>
+                <HashRouter>
+                    <App />
+                </HashRouter>
+            </AuthProvider>
         </ThemeProvider>
     </StrictMode>,
 );

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { LatestReleaseCard } from "@/components/latest-release-card";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAppInfo, type AppInfo } from "@/lib/tauri";
 
@@ -47,6 +48,7 @@ export function HomePage() {
                     </CardContent>
                 ) : null}
             </Card>
+            <LatestReleaseCard />
         </div>
     );
 }

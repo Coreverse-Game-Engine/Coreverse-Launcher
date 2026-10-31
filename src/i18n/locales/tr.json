@@ -5,6 +5,7 @@
     "nav": {
         "home": "Ana Sayfa",
         "library": "Kütüphane",
+        "account": "Hesap",
         "settings": "Ayarlar"
     },
     "common": {
@@ -22,7 +23,16 @@
         "statusTitle": "Uygulama durumu",
         "statusDesktop": "Masaüstü uygulaması olarak çalışıyor.",
         "statusBrowser": "Tarayıcı önizlemesinde çalışıyor. Yerel özellikler için uygulamayı Tauri ile başlat.",
-        "version": "Sürüm {{version}}"
+        "version": "Sürüm {{version}}",
+        "engine": {
+            "title": "Coreverse Engine",
+            "loading": "Son sürüm denetleniyor…",
+            "unconfigured": "Sürümleri görmek için başlatıcıyı Coreverse DB'ye bağla (.env.local içinde PUBLIC_SUPABASE_URL ve PUBLIC_SUPABASE_ANON_KEY).",
+            "none": "Henüz yayımlanmış bir sürüm yok.",
+            "error": "Sürüm bilgisi yüklenemedi.",
+            "latest": "Son {{status}} sürümü",
+            "releasedOn": "Yayın tarihi: {{date}}"
+        }
     },
     "library": {
         "title": "Kütüphane",
@@ -41,5 +51,30 @@
         "title": "Sayfa bulunamadı",
         "description": "Aradığın sayfa mevcut değil.",
         "back": "Ana sayfaya dön"
+    },
+    "account": {
+        "title": "Hesap",
+        "loading": "Oturumun yükleniyor…",
+        "signInTitle": "Giriş yap",
+        "signInDescription": "Coreverse hesabınla giriş yap.",
+        "email": "E-posta",
+        "password": "Parola",
+        "signIn": "Giriş yap",
+        "orContinueWith": "veya şununla devam et",
+        "waitingForBrowser": "Girişi tarayıcında tamamla, sonra buraya dön.",
+        "createAccountHint": "Hesabın yok mu? Coreverse web sitesinden oluşturabilirsin.",
+        "signedInTitle": "Giriş yaptın",
+        "signedInAs": "{{email}} olarak giriş yapıldı",
+        "signOut": "Çıkış yap",
+        "keyringWarning": "Sistem anahtarlığına erişilemiyor, bu yüzden başlatıcıyı bir sonraki açışında yeniden giriş yapman gerekecek.",
+        "notConfiguredTitle": "Hesap girişi yapılandırılmamış",
+        "notConfiguredDescription": "PUBLIC_SUPABASE_URL ve PUBLIC_SUPABASE_ANON_KEY değerlerini .env.local içine yaz ve başlatıcıyı yeniden başlat.",
+        "errors": {
+            "invalidCredentials": "E-posta veya parola yanlış.",
+            "emailNotConfirmed": "Önce sana gönderdiğimiz bağlantıyla e-posta adresini doğrula.",
+            "network": "Sunucuya ulaşılamadı. Bağlantını kontrol edip tekrar dene.",
+            "generic": "Bir şeyler ters gitti. Lütfen tekrar dene.",
+            "callback": "Tarayıcı ile giriş başarısız oldu: {{message}}"
+        }
     }
 }

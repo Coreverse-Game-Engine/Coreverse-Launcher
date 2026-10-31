@@ -5,6 +5,7 @@
     "nav": {
         "home": "Home",
         "library": "Library",
+        "account": "Account",
         "settings": "Settings"
     },
     "common": {
@@ -22,7 +23,16 @@
         "statusTitle": "Application status",
         "statusDesktop": "Running as a desktop application.",
         "statusBrowser": "Running in a browser preview. Start the app with Tauri to use native features.",
-        "version": "Version {{version}}"
+        "version": "Version {{version}}",
+        "engine": {
+            "title": "Coreverse Engine",
+            "loading": "Checking for the latest release…",
+            "unconfigured": "Connect the launcher to Coreverse DB (PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY in .env.local) to see releases.",
+            "none": "No release has been published yet.",
+            "error": "Could not load the release information.",
+            "latest": "Latest {{status}} release",
+            "releasedOn": "Released on {{date}}"
+        }
     },
     "library": {
         "title": "Library",
@@ -41,5 +51,30 @@
         "title": "Page not found",
         "description": "The page you are looking for does not exist.",
         "back": "Back to home"
+    },
+    "account": {
+        "title": "Account",
+        "loading": "Loading your session…",
+        "signInTitle": "Sign in",
+        "signInDescription": "Sign in with your Coreverse account.",
+        "email": "Email",
+        "password": "Password",
+        "signIn": "Sign in",
+        "orContinueWith": "or continue with",
+        "waitingForBrowser": "Finish signing in in your browser, then come back here.",
+        "createAccountHint": "No account yet? Create one on the Coreverse website.",
+        "signedInTitle": "You are signed in",
+        "signedInAs": "Signed in as {{email}}",
+        "signOut": "Sign out",
+        "keyringWarning": "The system keyring is not available, so you will have to sign in again the next time you start the launcher.",
+        "notConfiguredTitle": "Account sign-in is not configured",
+        "notConfiguredDescription": "Set PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY in .env.local and restart the launcher.",
+        "errors": {
+            "invalidCredentials": "The email or password is wrong.",
+            "emailNotConfirmed": "Confirm your email address first, using the link we sent you.",
+            "network": "The server could not be reached. Check your connection and try again.",
+            "generic": "Something went wrong. Please try again.",
+            "callback": "Signing in with the browser failed: {{message}}"
+        }
     }
 }
