@@ -122,10 +122,9 @@ jobs:
                           pacman -Syu --noconfirm --needed git curl wget file base-devel pkgconf
                           webkit2gtk-4.1 openssl libappindicator-gtk3 librsvg xdotool dbus
                     - name: openSUSE
-                      image:
-                          opensuse/tumbleweed:latest
-                          # Capabilities instead of package names: Tumbleweed renames the WebKitGTK
-                          # development packages from time to time, the pkg-config names stay.
+                      image: opensuse/tumbleweed:latest
+                        # Capabilities instead of package names: Tumbleweed renames the WebKitGTK
+                        # development packages from time to time, the pkg-config names stay.
                       install: >-
                           zypper --non-interactive install bash git curl wget file tar gzip gcc gcc-c++
                           make pkgconf-pkg-config "pkgconfig(webkit2gtk-4.1)" "pkgconfig(gtk+-3.0)"
@@ -138,10 +137,16 @@ jobs:
             - uses: actions/checkout@v5
 
             # Not `dtolnay/rust-toolchain`: that action needs `bash`, which minimal images lack.
+            # Do not extend PATH through $GITHUB_PATH here: when an image sets no PATH of its own
+            # (openSUSE Tumbleweed), the runner then replaces the whole PATH with just the added
+            # folder and even `sh` can no longer be found. Symlinks into /usr/local/bin avoid that.
             - name: Install Rust
               run: |
                   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
-                  echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+                  for tool in cargo rustc rustup; do
+                      ln -sf "$HOME/.cargo/bin/$tool" "/usr/local/bin/$tool"
+                  done
+                  cargo --version
 
             - name: Create a placeholder frontend build
               run: |
