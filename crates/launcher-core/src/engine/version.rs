@@ -73,7 +73,15 @@ mod tests {
 
     #[test]
     fn rejects_anything_that_could_leave_the_engines_folder() {
-        for bad in ["1.2", "1.2.3-beta", "1.2.3+build", "../1.2.3", "1.2.3/x", "", "01.2.3"] {
+        for bad in [
+            "1.2",
+            "1.2.3-beta",
+            "1.2.3+build",
+            "../1.2.3",
+            "1.2.3/x",
+            "",
+            "01.2.3",
+        ] {
             assert!(normalize_version(bad).is_err(), "{bad} should be rejected");
         }
     }

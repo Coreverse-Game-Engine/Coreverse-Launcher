@@ -68,7 +68,9 @@ pub fn select_artifact(release: &ReleaseMetadata, platform: Platform) -> Result<
     release
         .artifacts
         .iter()
-        .find(|artifact| artifact.os == platform.os && artifact.architecture == platform.architecture)
+        .find(|artifact| {
+            artifact.os == platform.os && artifact.architecture == platform.architecture
+        })
         .ok_or_else(|| Error::NoArtifact {
             version: release.version.clone(),
             os: platform.os.to_owned(),
@@ -77,7 +79,10 @@ pub fn select_artifact(release: &ReleaseMetadata, platform: Platform) -> Result<
 }
 
 fn is_sha256_hex(value: &str) -> bool {
-    value.len() == 64 && value.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
 }
 
 /// Checks everything the installer relies on before a single byte is downloaded.
@@ -87,10 +92,14 @@ fn is_sha256_hex(value: &str) -> bool {
 /// allow `http://` so a local test server works.
 pub fn validate_artifact(artifact: &ArtifactMetadata) -> Result<ValidatedArtifact> {
     if !is_sha256_hex(&artifact.sha256) {
-        return Err(Error::InvalidMetadata("sha256 is not 64 lowercase hex digits".to_owned()));
+        return Err(Error::InvalidMetadata(
+            "sha256 is not 64 lowercase hex digits".to_owned(),
+        ));
     }
     if artifact.size_bytes == 0 {
-        return Err(Error::InvalidMetadata("size_bytes must be greater than zero".to_owned()));
+        return Err(Error::InvalidMetadata(
+            "size_bytes must be greater than zero".to_owned(),
+        ));
     }
 
     let url = Url::parse(&artifact.download_url)
@@ -125,9 +134,10 @@ mod tests {
 
     #[test]
     fn accepts_a_github_release_url() {
-        let validated =
-            validate_artifact(&artifact("https://github.com/o/r/releases/download/v1/engine.zip"))
-                .unwrap();
+        let validated = validate_artifact(&artifact(
+            "https://github.com/o/r/releases/download/v1/engine.zip",
+        ))
+        .unwrap();
         assert_eq!(validated.format, ArchiveFormat::Zip);
     }
 

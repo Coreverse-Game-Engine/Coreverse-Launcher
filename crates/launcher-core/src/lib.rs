@@ -16,10 +16,12 @@ pub mod settings;
 use serde::Serialize;
 
 pub use database::Database;
-pub use engine::{EngineService, EventSink, InstallEvent, InstallPhase, InstallStatus, InstalledEngine};
+pub use engine::{
+    EngineService, EventSink, InstallEvent, InstallPhase, InstallStatus, InstalledEngine,
+};
 pub use error::{Error, ErrorInfo, Result};
-pub use platform::Platform;
 pub use logging::LogGuard;
+pub use platform::Platform;
 pub use secrets::RefreshTokenStore;
 pub use settings::{Language, Settings, SettingsPatch, Theme};
 

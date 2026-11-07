@@ -48,7 +48,9 @@ impl Reporter {
             let last = self.last.lock().unwrap_or_else(PoisonError::into_inner);
             match *last {
                 Some((previous, at)) => {
-                    previous != phase || (total > 0 && done >= total) || at.elapsed() >= MIN_INTERVAL
+                    previous != phase
+                        || (total > 0 && done >= total)
+                        || at.elapsed() >= MIN_INTERVAL
                 }
                 None => true,
             }

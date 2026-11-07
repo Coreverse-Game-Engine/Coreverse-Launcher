@@ -160,7 +160,12 @@ mod tests {
         };
         let value = serde_json::to_value(&error).unwrap();
         assert_eq!(value["code"], "database_too_new");
-        assert!(value["message"].as_str().unwrap().contains("schema version 9"));
+        assert!(
+            value["message"]
+                .as_str()
+                .unwrap()
+                .contains("schema version 9")
+        );
     }
 
     #[test]

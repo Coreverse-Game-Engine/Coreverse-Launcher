@@ -197,9 +197,17 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let service = service(dir.path());
         assert!(matches!(service.api_base_url(), Err(Error::NotConfigured)));
-        service.configure_api("https://a.supabase.co/functions/v1").unwrap();
-        service.configure_api("https://a.supabase.co/functions/v1").unwrap();
-        assert!(service.configure_api("https://b.supabase.co/functions/v1").is_err());
+        service
+            .configure_api("https://a.supabase.co/functions/v1")
+            .unwrap();
+        service
+            .configure_api("https://a.supabase.co/functions/v1")
+            .unwrap();
+        assert!(
+            service
+                .configure_api("https://b.supabase.co/functions/v1")
+                .is_err()
+        );
     }
 
     #[test]
@@ -245,7 +253,13 @@ mod tests {
         service.uninstall("1.0.0").unwrap();
 
         assert!(!service.paths.install_dir("1.0.0").exists());
-        assert!(matches!(service.uninstall("1.0.0"), Err(Error::NotInstalled(_))));
-        assert!(matches!(service.uninstall("../1.0.0"), Err(Error::InvalidVersion(_))));
+        assert!(matches!(
+            service.uninstall("1.0.0"),
+            Err(Error::NotInstalled(_))
+        ));
+        assert!(matches!(
+            service.uninstall("../1.0.0"),
+            Err(Error::InvalidVersion(_))
+        ));
     }
 }

@@ -45,7 +45,10 @@ mod tests {
     fn applies_all_migrations_to_a_fresh_database() {
         let mut conn = Connection::open_in_memory().unwrap();
         run(&mut conn).unwrap();
-        assert_eq!(user_version(&conn), u32::try_from(MIGRATIONS.len()).unwrap());
+        assert_eq!(
+            user_version(&conn),
+            u32::try_from(MIGRATIONS.len()).unwrap()
+        );
         conn.execute("INSERT INTO settings (key, value) VALUES ('k', 'v')", [])
             .unwrap();
     }
@@ -55,7 +58,10 @@ mod tests {
         let mut conn = Connection::open_in_memory().unwrap();
         run(&mut conn).unwrap();
         run(&mut conn).unwrap();
-        assert_eq!(user_version(&conn), u32::try_from(MIGRATIONS.len()).unwrap());
+        assert_eq!(
+            user_version(&conn),
+            u32::try_from(MIGRATIONS.len()).unwrap()
+        );
     }
 
     #[test]

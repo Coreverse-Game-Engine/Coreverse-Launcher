@@ -94,7 +94,10 @@ mod tests {
     fn only_one_installation_at_a_time() {
         let manager = InstallManager::default();
         manager.begin("1.0.0").unwrap();
-        assert!(matches!(manager.begin("2.0.0"), Err(Error::InstallInProgress)));
+        assert!(matches!(
+            manager.begin("2.0.0"),
+            Err(Error::InstallInProgress)
+        ));
         manager.finish();
         assert!(manager.begin("2.0.0").is_ok());
     }

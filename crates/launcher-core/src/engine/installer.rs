@@ -73,7 +73,7 @@ pub async fn install(
         cancel,
         reporter,
     )
-        .await?;
+    .await?;
 
     // Verifying the checksum is what ties the file to what Coreverse DB published.
     let actual = {
@@ -86,8 +86,8 @@ pub async fn install(
                 reporter.tick(InstallPhase::Verifying, done, total);
             })
         })
-            .await
-            .map_err(join_error)??
+        .await
+        .map_err(join_error)??
     };
     if actual != artifact.sha256 {
         let _ = tokio::fs::remove_file(&part).await;
@@ -218,10 +218,18 @@ mod tests {
         let engine = unpack_and_register(&job).unwrap();
 
         assert_eq!(engine.version, "1.0.0");
-        assert_eq!(fs::read(dir.path().join("engines/1.0.0/run")).unwrap(), b"bin");
-        assert!(!part.exists(), "the archive is removed after a successful install");
+        assert_eq!(
+            fs::read(dir.path().join("engines/1.0.0/run")).unwrap(),
+            b"bin"
+        );
+        assert!(
+            !part.exists(),
+            "the archive is removed after a successful install"
+        );
         assert_eq!(store::list(&db).unwrap().len(), 1);
-        let leftovers = fs::read_dir(dir.path().join("engines/.staging")).unwrap().count();
+        let leftovers = fs::read_dir(dir.path().join("engines/.staging"))
+            .unwrap()
+            .count();
         assert_eq!(leftovers, 0, "staging folders are removed");
     }
 

@@ -49,8 +49,7 @@ pub fn get(db: &Database, version: &str) -> Result<Option<InstalledEngine>> {
 /// Newest version first.
 pub fn list(db: &Database) -> Result<Vec<InstalledEngine>> {
     let mut engines = db.with_conn(|conn| {
-        let mut statement =
-            conn.prepare(&format!("SELECT {COLUMNS} FROM installed_engines"))?;
+        let mut statement = conn.prepare(&format!("SELECT {COLUMNS} FROM installed_engines"))?;
         let rows = statement.query_map([], from_row)?;
         Ok(rows.collect::<rusqlite::Result<Vec<_>>>()?)
     })?;
@@ -81,7 +80,10 @@ pub fn insert(db: &Database, engine: &InstalledEngine) -> Result<InstalledEngine
 
 pub fn delete(db: &Database, version: &str) -> Result<()> {
     db.with_conn(|conn| {
-        conn.execute("DELETE FROM installed_engines WHERE version = ?1", [version])?;
+        conn.execute(
+            "DELETE FROM installed_engines WHERE version = ?1",
+            [version],
+        )?;
         Ok(())
     })
 }

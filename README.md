@@ -21,7 +21,7 @@ The official launcher of the Coreverse ecosystem.
 - The Tauri system prerequisites for your OS: <https://tauri.app/start/prerequisites/>
 - Linux only, in addition: the libdbus development files and `pkg-config` for the keyring
   (Debian: `libdbus-1-dev pkg-config`, Fedora: `dbus-devel pkgconf-pkg-config`,
-  Arch: `dbus pkgconf`, openSUSE: `dbus-1-devel pkg-config`), and a Secret Service provider such
+  Arch: `dbus pkgconf`, openSUSE: `dbus-1-devel pkgconf-pkg-config`), and a Secret Service provider such
   as GNOME Keyring or KWallet at runtime
 
 ## Getting started

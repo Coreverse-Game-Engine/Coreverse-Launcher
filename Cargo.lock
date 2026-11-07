@@ -702,6 +702,7 @@ name = "coreverse-launcher"
 version = "0.1.0"
 dependencies = [
  "launcher-core",
+ "serde_json",
  "tauri",
  "tauri-build",
  "tauri-plugin-deep-link",

@@ -11,11 +11,13 @@ concurrency:
 
 permissions:
     contents: read
+    packages: read
 
 env:
     CARGO_TERM_COLOR: always
-    # `@Coreverse-Game-Engine/db-client` lives in GitHub Packages. Add a repository secret named
-    # GH_PACKAGES_TOKEN (a token with `read:packages`); the workflow token is the fallback.
+    # `@Coreverse-Game-Engine/db-client` lives in GitHub Packages. Either add a repository secret
+    # named GH_PACKAGES_TOKEN (a token with `read:packages`), or give this repository access to the
+    # package (package settings -> "Manage Actions access"); the workflow token is the fallback.
     PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
 
 jobs:
@@ -110,10 +112,13 @@ jobs:
                           webkit2gtk-4.1 openssl libappindicator-gtk3 librsvg xdotool dbus
                     - name: openSUSE
                       image: opensuse/tumbleweed:latest
+                        # Capabilities instead of package names: Tumbleweed renames the WebKitGTK
+                        # development packages from time to time, the pkg-config names stay.
                       install: >-
                           zypper --non-interactive install git curl wget file tar gzip gcc gcc-c++
-                          make pkg-config webkit2gtk3-devel libopenssl-3-devel
-                          libappindicator3-devel librsvg-devel dbus-1-devel
+                          make pkgconf-pkg-config "pkgconfig(webkit2gtk-4.1)" "pkgconfig(gtk+-3.0)"
+                          "pkgconfig(libsoup-3.0)" "pkgconfig(librsvg-2.0)" "pkgconfig(openssl)"
+                          "pkgconfig(dbus-1)"
         steps:
             - name: Install system packages
               run: ${{ matrix.install }}

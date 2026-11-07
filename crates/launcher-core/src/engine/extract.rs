@@ -28,17 +28,26 @@ pub enum ArchiveFormat {
 }
 
 impl ArchiveFormat {
-    /// Recognises the format from a file name or URL path.
+    /// Recognises the format from a file name or URL path, ignoring case.
     #[must_use]
     pub fn from_path(path: &str) -> Option<Self> {
-        let lower = path.to_ascii_lowercase();
-        if lower.ends_with(".zip") {
-            Some(Self::Zip)
-        } else if lower.ends_with(".tar.gz") || lower.ends_with(".tgz") {
-            Some(Self::TarGz)
-        } else {
-            None
+        let path = Path::new(path);
+        let extension = path.extension()?.to_str()?;
+        if extension.eq_ignore_ascii_case("zip") || extension.eq_ignore_ascii_case("tgz") {
+            // `.tgz` is a gzipped tar archive under a short name.
+            return Some(if extension.eq_ignore_ascii_case("zip") {
+                Self::Zip
+            } else {
+                Self::TarGz
+            });
         }
+        let is_tar_gz = extension.eq_ignore_ascii_case("gz")
+            && path
+                .file_stem()
+                .and_then(|stem| Path::new(stem).extension())
+                .and_then(|inner| inner.to_str())
+                .is_some_and(|inner| inner.eq_ignore_ascii_case("tar"));
+        is_tar_gz.then_some(Self::TarGz)
     }
 }
 
@@ -121,7 +130,10 @@ fn ensure_plain_parents(root: &Path, path: &Path) -> Result<()> {
         current.push(component);
         match fs::symlink_metadata(&current) {
             Ok(metadata) if metadata.file_type().is_symlink() => {
-                return Err(unsafe_entry(format!("{} goes through a link", path.display())));
+                return Err(unsafe_entry(format!(
+                    "{} goes through a link",
+                    path.display()
+                )));
             }
             Ok(_) => {}
             Err(error) if error.kind() == io::ErrorKind::NotFound => break,
@@ -137,9 +149,10 @@ fn prepare_target(root: &Path, target: &Path) -> Result<()> {
         fs::create_dir_all(parent)?;
     }
     match fs::symlink_metadata(target) {
-        Ok(metadata) if metadata.file_type().is_symlink() => {
-            Err(unsafe_entry(format!("{} replaces a link", target.display())))
-        }
+        Ok(metadata) if metadata.file_type().is_symlink() => Err(unsafe_entry(format!(
+            "{} replaces a link",
+            target.display()
+        ))),
         _ => Ok(()),
     }
 }
@@ -185,7 +198,10 @@ fn link_stays_inside(root: &Path, link_path: &Path, target: &Path) -> bool {
 fn create_symlink_checked(root: &Path, link_path: &Path, target: &str) -> Result<()> {
     let target_path = Path::new(target);
     if target.is_empty() || !link_stays_inside(root, link_path, target_path) {
-        return Err(unsafe_entry(format!("link {} -> {target}", link_path.display())));
+        return Err(unsafe_entry(format!(
+            "link {} -> {target}",
+            link_path.display()
+        )));
     }
     prepare_target(root, link_path)?;
     std::os::unix::fs::symlink(target_path, link_path)?;
@@ -208,7 +224,9 @@ fn apply_mode(path: &Path, mode: u32) -> Result<()> {
     Ok(())
 }
 
+// Same signature as the unix version, which can fail.
 #[cfg(not(unix))]
+#[allow(clippy::unnecessary_wraps)]
 fn apply_mode(_path: &Path, _mode: u32) -> Result<()> {
     Ok(())
 }
@@ -237,7 +255,11 @@ fn extract_zip(
         ensure_not_cancelled(cancel)?;
         let mut entry = zip.by_index(index).map_err(archive_error)?;
         let Some(relative) = entry.enclosed_name() else {
-            return Err(unsafe_entry(entry.name().to_owned()));
+            let name = entry.name().map_or_else(
+                |_| "an entry with an unreadable name".to_owned(),
+                std::borrow::Cow::into_owned,
+            );
+            return Err(unsafe_entry(name));
         };
         let target = dest.join(relative);
         let mode = entry.unix_mode();
@@ -388,14 +410,25 @@ mod tests {
         header.set_size(u64::try_from(data.len()).unwrap());
         header.set_mode(0o755);
         header.set_cksum();
-        builder.append_data(&mut header, name, Cursor::new(data)).unwrap();
+        builder
+            .append_data(&mut header, name, Cursor::new(data))
+            .unwrap();
     }
 
     #[test]
     fn recognises_archive_formats() {
-        assert_eq!(ArchiveFormat::from_path("/a/Engine.ZIP"), Some(ArchiveFormat::Zip));
-        assert_eq!(ArchiveFormat::from_path("/a/e.tar.gz"), Some(ArchiveFormat::TarGz));
-        assert_eq!(ArchiveFormat::from_path("/a/e.tgz"), Some(ArchiveFormat::TarGz));
+        assert_eq!(
+            ArchiveFormat::from_path("/a/Engine.ZIP"),
+            Some(ArchiveFormat::Zip)
+        );
+        assert_eq!(
+            ArchiveFormat::from_path("/a/e.tar.gz"),
+            Some(ArchiveFormat::TarGz)
+        );
+        assert_eq!(
+            ArchiveFormat::from_path("/a/e.tgz"),
+            Some(ArchiveFormat::TarGz)
+        );
         assert_eq!(ArchiveFormat::from_path("/a/e.exe"), None);
     }
 
@@ -403,12 +436,21 @@ mod tests {
     fn extracts_a_zip() {
         let dir = tempfile::tempdir().unwrap();
         let archive = dir.path().join("a.zip");
-        write_zip(&archive, &[("Engine/bin/run", b"hello"), ("Engine/readme.txt", b"hi")]);
+        write_zip(
+            &archive,
+            &[("Engine/bin/run", b"hello"), ("Engine/readme.txt", b"hi")],
+        );
         let dest = dir.path().join("out");
         fs::create_dir(&dest).unwrap();
 
-        extract(&archive, ArchiveFormat::Zip, &dest, &AtomicBool::new(false), &mut no_progress())
-            .unwrap();
+        extract(
+            &archive,
+            ArchiveFormat::Zip,
+            &dest,
+            &AtomicBool::new(false),
+            &mut no_progress(),
+        )
+        .unwrap();
 
         assert_eq!(fs::read(dest.join("Engine/bin/run")).unwrap(), b"hello");
         assert_eq!(content_root(&dest).unwrap(), dest.join("Engine"));
@@ -422,8 +464,13 @@ mod tests {
         let dest = dir.path().join("out");
         fs::create_dir(&dest).unwrap();
 
-        let result =
-            extract(&archive, ArchiveFormat::Zip, &dest, &AtomicBool::new(false), &mut no_progress());
+        let result = extract(
+            &archive,
+            ArchiveFormat::Zip,
+            &dest,
+            &AtomicBool::new(false),
+            &mut no_progress(),
+        );
 
         assert!(matches!(result, Err(Error::UnsafeArchive(_))));
         assert!(!dir.path().join("evil.txt").exists());
@@ -457,7 +504,10 @@ mod tests {
         #[cfg(unix)]
         {
             result.unwrap();
-            assert_eq!(fs::read(dest.join("Engine/lib/libcore.so")).unwrap(), b"lib");
+            assert_eq!(
+                fs::read(dest.join("Engine/lib/libcore.so")).unwrap(),
+                b"lib"
+            );
         }
         #[cfg(not(unix))]
         assert!(result.is_err());
@@ -472,7 +522,9 @@ mod tests {
             link.set_entry_type(tar::EntryType::Symlink);
             link.set_size(0);
             link.set_cksum();
-            builder.append_link(&mut link, "Engine/escape", "../../outside").unwrap();
+            builder
+                .append_link(&mut link, "Engine/escape", "../../outside")
+                .unwrap();
         });
         let dest = dir.path().join("out");
         fs::create_dir(&dest).unwrap();
@@ -491,11 +543,27 @@ mod tests {
     #[test]
     fn link_containment_is_checked_lexically() {
         let root = Path::new("/r");
-        assert!(link_stays_inside(root, Path::new("/r/a/l"), Path::new("../b")));
+        assert!(link_stays_inside(
+            root,
+            Path::new("/r/a/l"),
+            Path::new("../b")
+        ));
         assert!(link_stays_inside(root, Path::new("/r/l"), Path::new("a/b")));
-        assert!(!link_stays_inside(root, Path::new("/r/l"), Path::new("../x")));
-        assert!(!link_stays_inside(root, Path::new("/r/a/l"), Path::new("../../x")));
-        assert!(!link_stays_inside(root, Path::new("/r/l"), Path::new("/etc/passwd")));
+        assert!(!link_stays_inside(
+            root,
+            Path::new("/r/l"),
+            Path::new("../x")
+        ));
+        assert!(!link_stays_inside(
+            root,
+            Path::new("/r/a/l"),
+            Path::new("../../x")
+        ));
+        assert!(!link_stays_inside(
+            root,
+            Path::new("/r/l"),
+            Path::new("/etc/passwd")
+        ));
     }
 
     #[test]
@@ -506,8 +574,13 @@ mod tests {
         let dest = dir.path().join("out");
         fs::create_dir(&dest).unwrap();
 
-        let result =
-            extract(&archive, ArchiveFormat::Zip, &dest, &AtomicBool::new(true), &mut no_progress());
+        let result = extract(
+            &archive,
+            ArchiveFormat::Zip,
+            &dest,
+            &AtomicBool::new(true),
+            &mut no_progress(),
+        );
 
         assert!(matches!(result, Err(Error::Cancelled)));
     }
