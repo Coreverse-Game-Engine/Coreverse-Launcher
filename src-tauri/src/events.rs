@@ -4,3 +4,6 @@
 
 /// Emitted with the full `Settings` payload after every successful settings update.
 pub const SETTINGS_CHANGED: &str = "settings-changed";
+
+/// Emitted with an `InstallEvent` payload while an engine installation runs.
+pub const ENGINE_INSTALL: &str = "engine-install-event";

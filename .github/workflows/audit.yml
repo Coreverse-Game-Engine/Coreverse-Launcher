@@ -1,0 +1,39 @@
+name: Dependency audit
+
+# Not a merge gate: advisories appear independently of our changes, so this runs weekly and when
+# the lockfiles change, and a failure is something to look at, not something that blocks a PR.
+on:
+    schedule:
+        - cron: "0 6 * * 1"
+    push:
+        paths:
+            - pnpm-lock.yaml
+            - Cargo.lock
+            - .github/workflows/audit.yml
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    issues: write
+    checks: write
+
+jobs:
+    cargo-audit:
+        name: cargo audit
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v5
+            - uses: rustsec/audit-check@v2
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+    pnpm-audit:
+        name: pnpm audit
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v5
+            - uses: pnpm/action-setup@v4
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+            - run: pnpm audit --prod --audit-level high

@@ -5,16 +5,22 @@
 //! with plain `cargo test`. The Tauri crate only exposes it to the frontend.
 
 mod database;
+pub mod engine;
 mod error;
 pub mod logging;
 mod migrations;
+pub mod platform;
+pub mod secrets;
 pub mod settings;
 
 use serde::Serialize;
 
 pub use database::Database;
-pub use error::{Error, Result};
+pub use engine::{EngineService, EventSink, InstallEvent, InstallPhase, InstallStatus, InstalledEngine};
+pub use error::{Error, ErrorInfo, Result};
+pub use platform::Platform;
 pub use logging::LogGuard;
+pub use secrets::RefreshTokenStore;
 pub use settings::{Language, Settings, SettingsPatch, Theme};
 
 /// Display name of the application.

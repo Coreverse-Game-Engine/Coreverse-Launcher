@@ -46,8 +46,11 @@ pub fn run() {
             #[cfg(any(windows, target_os = "linux"))]
             app.deep_link().register_all()?;
 
-            tracing::info!(version = env!("CARGO_PKG_VERSION"), "Coreverse Launcher started");
-            app.manage(AppState::new(db, log_guard));
+            tracing::info!(
+                version = env!("CARGO_PKG_VERSION"),
+                "Coreverse Launcher started"
+            );
+            app.manage(AppState::new(db, log_guard, &data_dir)?);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -57,6 +60,13 @@ pub fn run() {
             commands::load_refresh_token,
             commands::save_refresh_token,
             commands::clear_refresh_token,
+            commands::configure_api,
+            commands::current_platform,
+            commands::list_installed_engines,
+            commands::get_install_status,
+            commands::cancel_install,
+            commands::uninstall_engine,
+            commands::install_engine,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Coreverse Launcher");

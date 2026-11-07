@@ -42,8 +42,31 @@ pnpm tauri dev
 | `pnpm typecheck`                             | Type check with the native TypeScript 7 compiler (`tsc`)    |
 | `pnpm typecheck:compat`                      | Same check with the TypeScript 6 compatibility build        |
 | `pnpm rust:fmt` / `pnpm rust:clippy`         | rustfmt / Clippy (`-D warnings`)                            |
+| `pnpm test` / `pnpm test:watch`              | Frontend tests (Vitest, Testing Library, jsdom)             |
 | `pnpm rust:test`                             | Rust tests of the whole workspace                           |
 | `pnpm verify`                                | Everything above, in CI order                               |
+
+## Quality checks and CI
+
+`pnpm verify` runs everything CI runs, in the same order: Prettier, ESLint, type checks
+(native TypeScript 7 and the TypeScript 6 compatibility build), Vitest, the production build,
+`cargo fmt --check`, Clippy with `-D warnings` and `cargo test`.
+
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request:
+
+- **Frontend** on Ubuntu: format, lint, both type checks, tests and the build.
+- **Rust** on Linux, Windows, macOS (arm64) and macOS (x64): `fmt`, Clippy and tests.
+- **Linux distributions** in containers (Debian, Fedora, Arch, openSUSE): the workspace has to
+  compile and pass its tests with each distribution's own system libraries.
+
+Installing `@Coreverse-Game-Engine/db-client` in CI needs a repository secret named
+`GH_PACKAGES_TOKEN` (a token with `read:packages`); without it the workflow falls back to the
+workflow token, which only works if the package grants this repository access. Dependabot needs
+the same secret under *Settings -> Secrets -> Dependabot*.
+
+`.github/workflows/audit.yml` runs `cargo audit` and `pnpm audit` weekly and when a lockfile
+changes. It is a report, not a merge gate. Commit `pnpm-lock.yaml` and `Cargo.lock`; CI installs
+with `--frozen-lockfile`.
 
 ## Layout
 
@@ -82,10 +105,32 @@ startup in `src/lib/db.ts`:
   public reads (releases, news, ...) work without an account, which the launcher relies on to
   check for updates before sign-in.
 
+## Installing engines
+
+The Library page installs Coreverse Engine versions published in Coreverse DB:
+
+1. The Rust side reads the release from `GET /releases/{version}` itself, so the download URL and
+   the SHA-256 never pass through the webview, and picks the build for this OS and architecture.
+2. It downloads the archive over HTTPS. A partial download (after a cancel, a crash or a lost
+   connection) is resumed with a range request.
+3. It verifies the file against the **SHA-256 from Coreverse DB**, not from the download source,
+   and discards the file on a mismatch.
+4. It unpacks into a staging folder and only then moves the result to `engines/<version>`;
+   a failed or cancelled install leaves nothing half-installed behind.
+
+Archives must be `.zip`, `.tar.gz` or `.tgz` (decided from the artifact's `download_url`). They
+are unpacked defensively: no paths outside the install folder, no hard links or special files,
+symbolic links only when they point inside the folder (not supported on Windows), and a size cap.
+If the archive holds a single top-level folder, that folder becomes the engine's root.
+
+Without a connection the Library still lists and removes installed engines; only the update
+check and installing need the network.
+
 ## Data and logs
 
-Settings live in a SQLite database (`launcher.db`, schema migrations in
-`crates/launcher-core/migrations/`), logs in a daily rolling `launcher.log`. Both sit in
+Settings and the list of installed engines live in a SQLite database (`launcher.db`, schema
+migrations in `crates/launcher-core/migrations/`), the engines themselves in `engines/<version>`
+next to it, and logs in a daily rolling `launcher.log`. Both sit in
 the OS-specific app data and app log folders of the identifier `com.coreverse.launcher`
 (on Windows: `%APPDATA%` and `%LOCALAPPDATA%`). Set `RUST_LOG=debug` for more detail.
 

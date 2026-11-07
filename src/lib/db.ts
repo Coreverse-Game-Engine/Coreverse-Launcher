@@ -3,6 +3,7 @@ import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { configureCoreverseClient } from "@Coreverse-Game-Engine/db-client";
 
 import { getSupabase } from "@/lib/supabase";
+import { configureApi, describeError } from "@/lib/tauri";
 
 /**
  * Coreverse DB requests go through Rust's HTTP client instead of the webview's `fetch`.
@@ -38,6 +39,12 @@ export function configureDb(): boolean {
         fetch: isTauri() ? rustFetch : undefined,
     });
     configured = true;
+
+    // The Rust side downloads engine builds on its own and reads the release metadata (URL and
+    // checksum) from the DB itself, so it needs the same API address.
+    configureApi(`${url.replace(/\/+$/, "")}/functions/v1`).catch((error: unknown) => {
+        console.error(`Could not pass the API address to the launcher core: ${describeError(error)}`);
+    });
     return true;
 }
 

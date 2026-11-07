@@ -1,4 +1,4 @@
-import { Compass, Library, Settings, type LucideIcon } from "lucide-react";
+import { Compass, Library, Settings, UserRound, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { NavLink, Outlet } from "react-router";
 
@@ -18,6 +18,7 @@ interface NavItem {
 const NAV_ITEMS: readonly NavItem[] = [
     { to: "/", labelKey: "nav.home", icon: Compass, end: true },
     { to: "/library", labelKey: "nav.library", icon: Library },
+    { to: "/account", labelKey: "nav.account", icon: UserRound },
     { to: "/settings", labelKey: "nav.settings", icon: Settings },
 ];
 

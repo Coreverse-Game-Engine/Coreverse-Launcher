@@ -7,6 +7,7 @@ import "./index.css";
 
 import { App } from "@/App";
 import { AuthProvider } from "@/components/auth-provider";
+import { EnginesProvider } from "@/components/engines-provider";
 import { SettingsBridge } from "@/components/settings-bridge";
 import { ThemeProvider } from "@/components/theme-provider";
 import { configureDb } from "@/lib/db";
@@ -27,9 +28,11 @@ createRoot(container).render(
         <ThemeProvider>
             <SettingsBridge />
             <AuthProvider>
-                <HashRouter>
-                    <App />
-                </HashRouter>
+                <EnginesProvider>
+                    <HashRouter>
+                        <App />
+                    </HashRouter>
+                </EnginesProvider>
             </AuthProvider>
         </ThemeProvider>
     </StrictMode>,

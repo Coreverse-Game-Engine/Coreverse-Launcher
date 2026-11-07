@@ -83,3 +83,124 @@ export async function onSettingsChanged(handler: (settings: Settings) => void): 
     }
     return listen<Settings>(SETTINGS_CHANGED_EVENT, (event) => handler(event.payload));
 }
+
+/** Reads the refresh token from the system keyring. `null` when none is saved or in a browser. */
+export async function loadRefreshToken(): Promise<string | null> {
+    if (!isTauri()) {
+        return null;
+    }
+    return invoke<string | null>("load_refresh_token");
+}
+
+/** Saves the refresh token to the system keyring. Does nothing in a plain browser. */
+export async function saveRefreshToken(token: string): Promise<void> {
+    if (!isTauri()) {
+        return;
+    }
+    await invoke("save_refresh_token", { token });
+}
+
+/** Removes the refresh token from the system keyring. Does nothing in a plain browser. */
+export async function clearRefreshToken(): Promise<void> {
+    if (!isTauri()) {
+        return;
+    }
+    await invoke("clear_refresh_token");
+}
+
+/** Mirrors `launcher_core::Platform`: the names Coreverse DB uses for this machine. */
+export interface PlatformInfo {
+    os: string;
+    architecture: string;
+}
+
+/** Mirrors `launcher_core::InstalledEngine`. */
+export interface InstalledEngine {
+    version: string;
+    status: string;
+    os: string;
+    architecture: string;
+    sha256: string;
+    sizeBytes: number;
+    installedAt: string;
+}
+
+export type InstallPhase = "preparing" | "downloading" | "verifying" | "extracting" | "finalizing";
+
+/** Mirrors `launcher_core::InstallStatus`. */
+export interface InstallStatus {
+    version: string;
+    phase: InstallPhase;
+    done: number;
+    total: number;
+}
+
+/** Mirrors `launcher_core::InstallEvent`. */
+export type InstallEvent =
+    | ({ type: "progress" } & InstallStatus)
+    | { type: "finished"; version: string }
+    | { type: "cancelled"; version: string }
+    | { type: "failed"; version: string; error: LauncherError };
+
+/** Mirrors `events::ENGINE_INSTALL` in `src-tauri/src/events.rs`. */
+export const ENGINE_INSTALL_EVENT = "engine-install-event";
+
+/** Tells the Rust side where Coreverse DB's API lives. Needed once before installing. */
+export async function configureApi(baseUrl: string): Promise<void> {
+    if (!isTauri()) {
+        return;
+    }
+    await invoke("configure_api", { baseUrl });
+}
+
+export async function getPlatform(): Promise<PlatformInfo | null> {
+    if (!isTauri()) {
+        return null;
+    }
+    return invoke<PlatformInfo | null>("current_platform");
+}
+
+/** Installed engine versions, newest first. Empty in a plain browser. */
+export async function listInstalledEngines(): Promise<InstalledEngine[]> {
+    if (!isTauri()) {
+        return [];
+    }
+    return invoke<InstalledEngine[]>("list_installed_engines");
+}
+
+export async function getInstallStatus(): Promise<InstallStatus | null> {
+    if (!isTauri()) {
+        return null;
+    }
+    return invoke<InstallStatus | null>("get_install_status");
+}
+
+/** Runs until the installation is over; progress arrives through `onInstallEvent`. */
+export async function installEngine(version: string): Promise<InstalledEngine> {
+    if (!isTauri()) {
+        throw new Error("Installing engines needs the desktop app.");
+    }
+    return invoke<InstalledEngine>("install_engine", { version });
+}
+
+export async function cancelInstall(): Promise<boolean> {
+    if (!isTauri()) {
+        return false;
+    }
+    return invoke<boolean>("cancel_install");
+}
+
+export async function uninstallEngine(version: string): Promise<void> {
+    if (!isTauri()) {
+        return;
+    }
+    await invoke("uninstall_engine", { version });
+}
+
+/** Subscribes to installation events. Resolves to the function that unsubscribes again. */
+export async function onInstallEvent(handler: (event: InstallEvent) => void): Promise<() => void> {
+    if (!isTauri()) {
+        return () => undefined;
+    }
+    return listen<InstallEvent>(ENGINE_INSTALL_EVENT, (event) => handler(event.payload));
+}

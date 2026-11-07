@@ -4,7 +4,10 @@ use crate::{Error, Result};
 
 /// Ordered list of schema migrations. Migration number `n` (1-based) is stored in SQLite's
 /// `user_version` once applied. Never edit or reorder an existing entry, only append.
-const MIGRATIONS: &[&str] = &[include_str!("../migrations/0001_init.sql")];
+const MIGRATIONS: &[&str] = &[
+    include_str!("../migrations/0001_init.sql"),
+    include_str!("../migrations/0002_engines.sql"),
+];
 
 /// Brings the database up to the latest schema.
 pub fn run(conn: &mut Connection) -> Result<()> {
@@ -42,10 +45,7 @@ mod tests {
     fn applies_all_migrations_to_a_fresh_database() {
         let mut conn = Connection::open_in_memory().unwrap();
         run(&mut conn).unwrap();
-        assert_eq!(
-            user_version(&conn),
-            u32::try_from(MIGRATIONS.len()).unwrap()
-        );
+        assert_eq!(user_version(&conn), u32::try_from(MIGRATIONS.len()).unwrap());
         conn.execute("INSERT INTO settings (key, value) VALUES ('k', 'v')", [])
             .unwrap();
     }
@@ -55,10 +55,7 @@ mod tests {
         let mut conn = Connection::open_in_memory().unwrap();
         run(&mut conn).unwrap();
         run(&mut conn).unwrap();
-        assert_eq!(
-            user_version(&conn),
-            u32::try_from(MIGRATIONS.len()).unwrap()
-        );
+        assert_eq!(user_version(&conn), u32::try_from(MIGRATIONS.len()).unwrap());
     }
 
     #[test]
