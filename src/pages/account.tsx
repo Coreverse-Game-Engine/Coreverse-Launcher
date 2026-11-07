@@ -129,7 +129,9 @@ function SignInCard() {
                     </Button>
                 </div>
                 {waitingForBrowser ? (
-                    <p className="text-sm text-muted-foreground">{t("account.waitingForBrowser")}</p>
+                    <p className="text-sm text-muted-foreground">
+                        {t("account.waitingForBrowser")}
+                    </p>
                 ) : null}
                 <p className="text-sm text-muted-foreground">{t("account.createAccountHint")}</p>
             </CardContent>

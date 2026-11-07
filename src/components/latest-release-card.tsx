@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CoreverseApiError, getLatestRelease, type Release } from "@Coreverse-Game-Engine/db-client";
+import {
+    CoreverseApiError,
+    getLatestRelease,
+    type Release,
+} from "@Coreverse-Game-Engine/db-client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { isDbConfigured } from "@/lib/db";

@@ -1,8 +1,6 @@
 import { AUTH_REDIRECT_URL } from "@/lib/supabase";
 
-export type AuthCallback =
-    | { kind: "code"; code: string }
-    | { kind: "error"; message: string };
+export type AuthCallback = { kind: "code"; code: string } | { kind: "error"; message: string };
 
 const EXPECTED = new URL(AUTH_REDIRECT_URL);
 

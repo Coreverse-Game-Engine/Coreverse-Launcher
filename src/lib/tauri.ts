@@ -77,7 +77,9 @@ export async function updateSettings(patch: SettingsPatch): Promise<Settings | n
 }
 
 /** Subscribes to settings changes. Resolves to the function that unsubscribes again. */
-export async function onSettingsChanged(handler: (settings: Settings) => void): Promise<() => void> {
+export async function onSettingsChanged(
+    handler: (settings: Settings) => void,
+): Promise<() => void> {
     if (!isTauri()) {
         return () => undefined;
     }

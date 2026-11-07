@@ -33,8 +33,8 @@ function InstallProgress() {
                     {showBytes && progress.total > 0
                         ? ` · ${formatBytes(progress.done)} / ${formatBytes(progress.total)}`
                         : value === null
-                            ? ""
-                            : ` · ${value}%`}
+                          ? ""
+                          : ` · ${value}%`}
                 </span>
                 <Button
                     variant="outline"
@@ -80,14 +80,14 @@ function LatestReleaseCard() {
         updateCheck === "checking"
             ? t("library.checking")
             : updateCheck === "offline"
-                ? t("library.offline")
-                : updateCheck === "error"
-                    ? t("library.checkFailed")
-                    : updateCheck === "unconfigured"
-                        ? t("library.unconfigured")
-                        : latest === null
-                            ? t("library.noRelease")
-                            : null;
+              ? t("library.offline")
+              : updateCheck === "error"
+                ? t("library.checkFailed")
+                : updateCheck === "unconfigured"
+                  ? t("library.unconfigured")
+                  : latest === null
+                    ? t("library.noRelease")
+                    : null;
 
     if (!latest) {
         return notice ? <p className="text-sm text-muted-foreground">{notice}</p> : null;
@@ -95,8 +95,8 @@ function LatestReleaseCard() {
 
     const artifact = platform
         ? latest.artifacts.find(
-            (item) => item.os === platform.os && item.architecture === platform.architecture,
-        )
+              (item) => item.os === platform.os && item.architecture === platform.architecture,
+          )
         : undefined;
     const isInstalled = installed.some((engine) => engine.version === latest.version);
     const busy = progress !== null;
@@ -199,7 +199,11 @@ function InstalledList() {
                                 >
                                     {t("library.confirmUninstall")}
                                 </Button>
-                                <Button variant="ghost" size="sm" onClick={() => setConfirming(null)}>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setConfirming(null)}
+                                >
                                     {t("library.keep")}
                                 </Button>
                             </div>

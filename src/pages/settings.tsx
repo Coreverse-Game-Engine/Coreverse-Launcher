@@ -52,7 +52,9 @@ export function SettingsPage() {
                             {SUPPORTED_LANGUAGES.map((language) => (
                                 <Button
                                     key={language}
-                                    variant={i18n.resolvedLanguage === language ? "default" : "outline"}
+                                    variant={
+                                        i18n.resolvedLanguage === language ? "default" : "outline"
+                                    }
                                     aria-pressed={i18n.resolvedLanguage === language}
                                     onClick={() => void setLanguage(language)}
                                 >

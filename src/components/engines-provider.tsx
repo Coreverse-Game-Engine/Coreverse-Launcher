@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { CoreverseApiError, getLatestRelease, type Release } from "@Coreverse-Game-Engine/db-client";
+import {
+    CoreverseApiError,
+    getLatestRelease,
+    type Release,
+} from "@Coreverse-Game-Engine/db-client";
 
 import { isDbConfigured } from "@/lib/db";
 import { EnginesContext, type EnginesContextValue, type UpdateCheck } from "@/lib/engines";
@@ -20,9 +24,7 @@ import {
 } from "@/lib/tauri";
 
 function toLauncherError(error: unknown): LauncherError {
-    return isLauncherError(error)
-        ? error
-        : { code: "unknown", message: describeError(error) };
+    return isLauncherError(error) ? error : { code: "unknown", message: describeError(error) };
 }
 
 /**

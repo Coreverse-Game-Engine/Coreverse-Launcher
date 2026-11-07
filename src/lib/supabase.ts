@@ -19,15 +19,15 @@ export function getSupabase(): SupabaseClient | null {
     client =
         url && anonKey
             ? createClient(url, anonKey, {
-                auth: {
-                    flowType: "pkce",
-                    persistSession: true,
-                    autoRefreshToken: true,
-                    // The OAuth redirect arrives as a deep link, not as a page URL.
-                    detectSessionInUrl: false,
-                    storage: secureSessionStorage,
-                },
-            })
+                  auth: {
+                      flowType: "pkce",
+                      persistSession: true,
+                      autoRefreshToken: true,
+                      // The OAuth redirect arrives as a deep link, not as a page URL.
+                      detectSessionInUrl: false,
+                      storage: secureSessionStorage,
+                  },
+              })
             : null;
     return client;
 }

@@ -4,13 +4,13 @@ The official launcher of the Coreverse ecosystem.
 
 ## Stack
 
-| Area      | Tools                                                                  |
-| --------- | ---------------------------------------------------------------------- |
-| Desktop   | Tauri 2, Rust (edition 2024), Cargo workspace                          |
-| Frontend  | React, TypeScript, Vite, TailwindCSS, shadcn/ui, Radix UI              |
-| Data      | SQLite (local storage), `@Coreverse-Game-Engine/db-client` (Supabase)  |
-| Quality   | ESLint, Prettier, rustfmt, Clippy                                      |
-| Packaging | pnpm                                                                   |
+| Area      | Tools                                                                 |
+| --------- | --------------------------------------------------------------------- |
+| Desktop   | Tauri 2, Rust (edition 2024), Cargo workspace                         |
+| Frontend  | React, TypeScript, Vite, TailwindCSS, shadcn/ui, Radix UI             |
+| Data      | SQLite (local storage), `@Coreverse-Game-Engine/db-client` (Supabase) |
+| Quality   | ESLint, Prettier, rustfmt, Clippy                                     |
+| Packaging | pnpm                                                                  |
 
 ## Requirements
 
@@ -35,16 +35,16 @@ pnpm tauri dev
 
 ## Scripts
 
-| Script                                       | Purpose                                                     |
-| -------------------------------------------- | ----------------------------------------------------------- |
-| `pnpm tauri dev` / `pnpm tauri build`        | Run or package the desktop app                              |
-| `pnpm lint` / `pnpm format`                  | ESLint / Prettier                                           |
-| `pnpm typecheck`                             | Type check with the native TypeScript 7 compiler (`tsc`)    |
-| `pnpm typecheck:compat`                      | Same check with the TypeScript 6 compatibility build        |
-| `pnpm rust:fmt` / `pnpm rust:clippy`         | rustfmt / Clippy (`-D warnings`)                            |
-| `pnpm test` / `pnpm test:watch`              | Frontend tests (Vitest, Testing Library, jsdom)             |
-| `pnpm rust:test`                             | Rust tests of the whole workspace                           |
-| `pnpm verify`                                | Everything above, in CI order                               |
+| Script                                | Purpose                                                  |
+| ------------------------------------- | -------------------------------------------------------- |
+| `pnpm tauri dev` / `pnpm tauri build` | Run or package the desktop app                           |
+| `pnpm lint` / `pnpm format`           | ESLint / Prettier                                        |
+| `pnpm typecheck`                      | Type check with the native TypeScript 7 compiler (`tsc`) |
+| `pnpm typecheck:compat`               | Same check with the TypeScript 6 compatibility build     |
+| `pnpm rust:fmt` / `pnpm rust:clippy`  | rustfmt / Clippy (`-D warnings`)                         |
+| `pnpm test` / `pnpm test:watch`       | Frontend tests (Vitest, Testing Library, jsdom)          |
+| `pnpm rust:test`                      | Rust tests of the whole workspace                        |
+| `pnpm verify`                         | Everything above, in CI order                            |
 
 ## Quality checks and CI
 
@@ -59,11 +59,13 @@ pnpm tauri dev
 - **Linux distributions** in containers (Debian, Fedora, Arch, openSUSE): the workspace has to
   compile and pass its tests with each distribution's own system libraries.
 
-Installing `@Coreverse-Game-Engine/db-client` in CI uses the workflow's own `GITHUB_TOKEN`
-(`packages: read`), which works because the launcher repository belongs to the same organization
-as the package; give the repository access in the package's settings. Dependabot cannot use that
-token: it needs a `GH_PACKAGES_TOKEN` secret (a token with `read:packages`) under
-*Settings -> Secrets -> Dependabot*.
+Installing `@Coreverse-Game-Engine/db-client` in CI uses the repository secret `GH_PACKAGES_TOKEN`
+(a token with `read:packages`) when it exists and the workflow's own `GITHUB_TOKEN` otherwise. The
+workflow token only works after the package grants this repository access: organization ->
+Packages -> db-client -> Package settings -> _Manage Actions access_ -> add this repository with
+the Read role. The "Check access to the db-client package" step prints the HTTP status the
+registry answers with, which tells the two failure modes apart (403: no access, 404: wrong name).
+Dependabot needs the same secret under _Settings -> Secrets -> Dependabot_.
 
 `.github/workflows/audit.yml` runs `cargo audit` and `pnpm audit` weekly and when a lockfile
 changes. It is a report, not a merge gate. Commit `pnpm-lock.yaml` and `Cargo.lock`; CI installs

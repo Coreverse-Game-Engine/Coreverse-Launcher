@@ -43,7 +43,9 @@ export function configureDb(): boolean {
     // The Rust side downloads engine builds on its own and reads the release metadata (URL and
     // checksum) from the DB itself, so it needs the same API address.
     configureApi(`${url.replace(/\/+$/, "")}/functions/v1`).catch((error: unknown) => {
-        console.error(`Could not pass the API address to the launcher core: ${describeError(error)}`);
+        console.error(
+            `Could not pass the API address to the launcher core: ${describeError(error)}`,
+        );
     });
     return true;
 }

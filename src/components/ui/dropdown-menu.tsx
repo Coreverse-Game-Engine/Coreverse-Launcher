@@ -13,10 +13,10 @@ function DropdownMenuTrigger(props: React.ComponentProps<typeof DropdownMenuPrim
 }
 
 function DropdownMenuContent({
-                                 className,
-                                 sideOffset = 4,
-                                 ...props
-                             }: React.ComponentProps<typeof DropdownMenuPrimitive.Content>) {
+    className,
+    sideOffset = 4,
+    ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Content>) {
     return (
         <DropdownMenuPrimitive.Portal>
             <DropdownMenuPrimitive.Content
@@ -39,10 +39,10 @@ function DropdownMenuRadioGroup(
 }
 
 function DropdownMenuRadioItem({
-                                   className,
-                                   children,
-                                   ...props
-                               }: React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem>) {
+    className,
+    children,
+    ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem>) {
     return (
         <DropdownMenuPrimitive.RadioItem
             data-slot="dropdown-menu-radio-item"
@@ -63,9 +63,9 @@ function DropdownMenuRadioItem({
 }
 
 function DropdownMenuLabel({
-                               className,
-                               ...props
-                           }: React.ComponentProps<typeof DropdownMenuPrimitive.Label>) {
+    className,
+    ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Label>) {
     return (
         <DropdownMenuPrimitive.Label
             data-slot="dropdown-menu-label"
@@ -76,9 +76,9 @@ function DropdownMenuLabel({
 }
 
 function DropdownMenuSeparator({
-                                   className,
-                                   ...props
-                               }: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
+    className,
+    ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
     return (
         <DropdownMenuPrimitive.Separator
             data-slot="dropdown-menu-separator"
