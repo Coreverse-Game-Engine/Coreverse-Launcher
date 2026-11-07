@@ -260,7 +260,7 @@ mod tests {
 
         assert!(unpack_and_register(&job).is_err());
         assert!(!dir.path().join("engines/1.0.0").exists());
-        assert!(store::list(&db).unwrap().is_empty());
+        assert_eq!(store::list(&db).unwrap(), Vec::<InstalledEngine>::new());
         assert!(part.exists(), "the archive stays for inspection or a retry");
     }
 }

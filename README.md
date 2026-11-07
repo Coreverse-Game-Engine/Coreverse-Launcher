@@ -59,10 +59,11 @@ pnpm tauri dev
 - **Linux distributions** in containers (Debian, Fedora, Arch, openSUSE): the workspace has to
   compile and pass its tests with each distribution's own system libraries.
 
-Installing `@Coreverse-Game-Engine/db-client` in CI needs a repository secret named
-`GH_PACKAGES_TOKEN` (a token with `read:packages`); without it the workflow falls back to the
-workflow token, which only works if the package grants this repository access. Dependabot needs
-the same secret under *Settings -> Secrets -> Dependabot*.
+Installing `@Coreverse-Game-Engine/db-client` in CI uses the workflow's own `GITHUB_TOKEN`
+(`packages: read`), which works because the launcher repository belongs to the same organization
+as the package; give the repository access in the package's settings. Dependabot cannot use that
+token: it needs a `GH_PACKAGES_TOKEN` secret (a token with `read:packages`) under
+*Settings -> Secrets -> Dependabot*.
 
 `.github/workflows/audit.yml` runs `cargo audit` and `pnpm audit` weekly and when a lockfile
 changes. It is a report, not a merge gate. Commit `pnpm-lock.yaml` and `Cargo.lock`; CI installs

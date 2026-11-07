@@ -107,11 +107,11 @@ mod tests {
     #[test]
     fn insert_get_list_delete() {
         let db = Database::open_in_memory().unwrap();
-        assert!(list(&db).unwrap().is_empty());
+        assert_eq!(list(&db).unwrap(), Vec::<InstalledEngine>::new());
 
         let stored = insert(&db, &engine("1.2.0")).unwrap();
         assert_eq!(stored.size_bytes, 1234);
-        assert!(!stored.installed_at.is_empty());
+        assert_ne!(stored.installed_at, "");
         insert(&db, &engine("1.10.0")).unwrap();
         insert(&db, &engine("0.9.0")).unwrap();
 
