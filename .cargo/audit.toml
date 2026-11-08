@@ -1,0 +1,16 @@
+# Advisories we have looked at and cannot fix by updating a dependency of ours. Each entry says
+# why it is safe to leave. Review the list when Tauri or its Linux (GTK3) stack moves on.
+[advisories]
+ignore = [
+    # quick-xml, through `plist`, which only reads our own Info.plist while Tauri bundles the
+    # app. It never parses untrusted XML at run time. Drop these once `plist` allows quick-xml 0.41.
+    "RUSTSEC-2026-0194",
+    "RUSTSEC-2026-0195",
+    # Unmaintained or unsound crates inside Tauri's Linux stack (gtk-rs 0.18, zbus 5 via the
+    # Secret Service client). Only Tauri and keyring can replace them.
+    "RUSTSEC-2024-0370", # proc-macro-error, build-time only
+    "RUSTSEC-2024-0429", # glib 0.18 VariantStrIter, not used by the launcher
+    "RUSTSEC-2026-0370", # zvariant
+    "RUSTSEC-2026-0371", # zbus_names
+    "RUSTSEC-2026-0372", # zvariant_derive
+]

@@ -59,6 +59,7 @@ fetch() { # url, file
 detect_family() {
     release_file=${COREVERSE_OS_RELEASE:-/etc/os-release}
     [ -r "$release_file" ] || { echo other; return; }
+    # shellcheck source=/dev/null
     ids=$(. "$release_file" && echo "${ID:-} ${ID_LIKE:-}")
     for id in $ids; do
         case "$id" in

@@ -13,19 +13,21 @@ name = "coreverse_launcher_lib"
 crate-type = ["rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2", features = [] }
+tauri-build = { version = "2.7.4", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
-tauri-plugin-deep-link = "2"
-tauri-plugin-http = "2"
-tauri-plugin-opener = "2"
-tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
-tauri-plugin-updater = "2"
+tauri = { version = "2.12.5", features = [] }
+tauri-plugin-deep-link = "2.6.3"
+tauri-plugin-http = "2.8.3"
+tauri-plugin-opener = "2.7.2"
+tauri-plugin-single-instance = { version = "2.5.5", features = ["deep-link"] }
+# Without the `zip` feature: it only unpacks `.zip` update payloads, which we never publish
+# (MSI, AppImage and `.app.tar.gz`), and it pulls in a `zip` version with open advisories.
+tauri-plugin-updater = { version = "2.12.0", default-features = false, features = ["rustls-tls"] }
 launcher-core = { path = "../crates/launcher-core" }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-tracing = "0.1"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+tracing = "0.1.44"
 
 [lints]
 workspace = true

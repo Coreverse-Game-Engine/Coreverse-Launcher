@@ -121,7 +121,8 @@ SPEC
 
 build_pacman() {
     command -v zstd >/dev/null || die "zstd is required"
-    local size entries
+    local size entry
+    local entries=()
     size=$(du -sb "$work/root" | cut -f1)
     cat >"$work/root/.PKGINFO" <<PKGINFO
 pkgname = coreverse-launcher
@@ -140,10 +141,13 @@ depend = dbus
 optdepend = gnome-keyring: keeps you signed in between launches
 optdepend = kwallet: keeps you signed in between launches
 PKGINFO
-    entries=$(cd "$work/root" && ls -A | grep -v '^\.PKGINFO$' | sort | tr '\n' ' ')
-    # shellcheck disable=SC2086  # the entries are plain top-level folder names
+    # The top-level folders of the package (usr, ...); .PKGINFO goes first.
+    for entry in "$work/root"/*; do
+        entries+=("$(basename "$entry")")
+    done
     (cd "$work/root" && LC_ALL=C tar --owner=0 --group=0 --numeric-owner \
-        -cf - .PKGINFO $entries | zstd -19 -T0 -q -o "$out/Coreverse-Launcher_${version}_linux_${asset_arch}.pkg.tar.zst")
+        -cf - .PKGINFO "${entries[@]}" |
+        zstd -19 -T0 -q -o "$out/Coreverse-Launcher_${version}_linux_${asset_arch}.pkg.tar.zst")
 }
 
 if [ "$format" = rpm ]; then build_rpm; else build_pacman; fi
