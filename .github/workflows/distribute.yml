@@ -24,7 +24,7 @@ jobs:
         env:
             GH_TOKEN: ${{ github.token }}
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v7
               with:
                   ref: ${{ env.TAG }}
             - uses: actions/setup-node@v5
@@ -55,7 +55,7 @@ jobs:
               with:
                   name: package-manifests
                   path: manifests
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v7
               if: ${{ env.TAP_TOKEN != '' }}
               with:
                   repository: Coreverse-Game-Engine/homebrew-tap
@@ -84,7 +84,7 @@ jobs:
               with:
                   name: package-manifests
                   path: manifests
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v7
               if: ${{ env.BUCKET_TOKEN != '' }}
               with:
                   repository: Coreverse-Game-Engine/scoop-bucket

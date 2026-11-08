@@ -36,7 +36,7 @@ jobs:
         outputs:
             version: ${{ steps.version.outputs.version }}
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v7
             - uses: actions/setup-node@v5
               with:
                   node-version: 22
@@ -76,7 +76,7 @@ jobs:
                       build-essential pkg-config libwebkit2gtk-4.1-dev libxdo-dev libssl-dev \
                       libayatana-appindicator3-dev librsvg2-dev libdbus-1-dev rpm zstd binutils
 
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v7
 
             - name: Install Rust
               run: |
@@ -128,7 +128,7 @@ jobs:
             WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
             WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v7
             - uses: dtolnay/rust-toolchain@stable
               with:
                   targets: ${{ matrix.target }}
@@ -191,7 +191,7 @@ jobs:
                     - { arch: x86_64, runner: macos-15-intel, target: x86_64-apple-darwin }
                     - { arch: arm64, runner: macos-latest, target: aarch64-apple-darwin }
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v7
             - uses: dtolnay/rust-toolchain@stable
               with:
                   targets: ${{ matrix.target }}
@@ -249,7 +249,7 @@ jobs:
             GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
             GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v7
             - uses: actions/setup-node@v5
               with:
                   node-version: 22
