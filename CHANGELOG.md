@@ -3,7 +3,7 @@
 All notable changes to Coreverse Launcher are written down here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions are plain `X.Y.Z`.
 
-## [Unreleased]
+## [0.1.0]
 
 ### Added
 
