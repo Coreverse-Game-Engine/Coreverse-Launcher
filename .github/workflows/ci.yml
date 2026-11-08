@@ -26,7 +26,7 @@ jobs:
         name: Release tooling (scripts, shell)
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v7
 
             - uses: actions/setup-node@v5
               with:
@@ -41,7 +41,7 @@ jobs:
         name: Frontend (format, lint, types, tests, build)
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v7
 
             - uses: actions/setup-node@v5
               with:
@@ -83,7 +83,7 @@ jobs:
                     - { name: macOS arm64, os: macos-latest }
                     - { name: macOS x64, os: macos-15-intel }
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v7
 
             - name: Install Linux system packages
               if: runner.os == 'Linux'
@@ -149,7 +149,7 @@ jobs:
             - name: Install system packages
               run: ${{ matrix.install }}
 
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v7
 
             # Not `dtolnay/rust-toolchain`: that action needs `bash`, which minimal images lack.
             # Do not extend PATH through $GITHUB_PATH here: when an image sets no PATH of its own
