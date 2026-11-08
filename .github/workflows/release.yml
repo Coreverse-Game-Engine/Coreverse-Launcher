@@ -40,6 +40,8 @@ jobs:
             - uses: actions/setup-node@v5
               with:
                   node-version: 22
+                  # Without this v5 turns caching on by itself (packageManager is set) and needs pnpm already.
+                  package-manager-cache: false
             - name: Check versions, updater key and changelog
               run: |
                   if [ "${GITHUB_REF_TYPE}" = tag ]; then
@@ -88,6 +90,8 @@ jobs:
             - uses: actions/setup-node@v5
               with:
                   node-version: 22
+                  # Without this v5 turns caching on by itself (packageManager is set) and needs pnpm already.
+                  package-manager-cache: false
 
             # pnpm comes from the `packageManager` field of package.json.
             - run: corepack enable
@@ -138,6 +142,8 @@ jobs:
             - uses: actions/setup-node@v5
               with:
                   node-version: 22
+                  # Without this v5 turns caching on by itself (packageManager is set) and needs pnpm already.
+                  package-manager-cache: false
 
             # pnpm comes from the `packageManager` field of package.json.
             - run: corepack enable
@@ -201,6 +207,8 @@ jobs:
             - uses: actions/setup-node@v5
               with:
                   node-version: 22
+                  # Without this v5 turns caching on by itself (packageManager is set) and needs pnpm already.
+                  package-manager-cache: false
 
             # pnpm comes from the `packageManager` field of package.json.
             - run: corepack enable
@@ -253,6 +261,8 @@ jobs:
             - uses: actions/setup-node@v5
               with:
                   node-version: 22
+                  # Without this v5 turns caching on by itself (packageManager is set) and needs pnpm already.
+                  package-manager-cache: false
             - run: sudo apt-get update && sudo apt-get install -y msitools
             - uses: actions/download-artifact@v4
               with:
