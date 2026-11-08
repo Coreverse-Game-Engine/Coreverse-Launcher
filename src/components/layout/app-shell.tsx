@@ -5,6 +5,7 @@ import { NavLink, Outlet } from "react-router";
 import { Emblem } from "@/components/brand/emblem";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { UpdateBanner } from "@/components/update-banner";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
@@ -59,6 +60,7 @@ export function AppShell() {
                 </div>
             </aside>
             <main className="flex-1 overflow-y-auto p-8">
+                <UpdateBanner />
                 <Outlet />
             </main>
         </div>

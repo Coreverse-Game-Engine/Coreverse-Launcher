@@ -1,8 +1,14 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { ThemeProvider } from "@/components/theme-provider";
+
+vi.mock("@/hooks/use-updates", async () => {
+    const { makeUpdates } = await import("@/test/updates");
+    return { useUpdates: () => makeUpdates() };
+});
+
 import { SettingsPage } from "@/pages/settings";
 import { THEME_STORAGE_KEY } from "@/lib/theme";
 

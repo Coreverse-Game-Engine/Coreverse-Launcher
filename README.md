@@ -44,6 +44,9 @@ pnpm tauri dev
 | `pnpm rust:fmt` / `pnpm rust:clippy`  | rustfmt / Clippy (`-D warnings`)                         |
 | `pnpm test` / `pnpm test:watch`       | Frontend tests (Vitest, Testing Library, jsdom)          |
 | `pnpm rust:test`                      | Rust tests of the whole workspace                        |
+| `pnpm release:bump <x>`               | Raise the version everywhere (`patch`, `minor`, `X.Y.Z`) |
+| `pnpm release:check` / `:test`        | Version sync check / tests of the release scripts        |
+| `pnpm release:pubkey <file>`          | Store the updater's public key in `tauri.conf.json`      |
 | `pnpm verify`                         | Everything above, in CI order                            |
 
 ## Quality checks and CI
@@ -128,6 +131,22 @@ If the archive holds a single top-level folder, that folder becomes the engine's
 
 Without a connection the Library still lists and removes installed engines; only the update
 check and installing need the network.
+
+## Packaging and releases
+
+A `vX.Y.Z` tag runs `.github/workflows/release.yml`, which builds, signs and packages the
+launcher for Windows (MSI), macOS (DMG, PKG) and Linux (AppImage, `.deb`, `.rpm`, pacman
+package), each on x86_64 and arm64, and prepares a draft release. Publishing it feeds the
+in-app updater and the winget, Scoop, Homebrew and AUR packages.
+
+- [docs/releasing.md](docs/releasing.md): one-time setup (signing keys, secrets), cutting a
+  release, what is built and how to verify it.
+- [docs/distribution.md](docs/distribution.md): every way to install and update, the file
+  naming and the `downloads.json` the Website's download panel reads.
+
+Updates are signed with a minisign key (`plugins.updater` in `src-tauri/tauri.conf.json`) and
+only offered where the launcher owns its installation; package-managed installs show how to
+update them instead.
 
 ## Data and logs
 

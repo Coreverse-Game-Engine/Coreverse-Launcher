@@ -3,8 +3,8 @@
 use std::sync::Arc;
 
 use launcher_core::{
-    AppInfo, Error, EventSink, InstallEvent, InstallStatus, InstalledEngine, Platform, Settings,
-    SettingsPatch, settings,
+    AppInfo, Error, EventSink, InstallEvent, InstallInfo, InstallStatus, InstalledEngine, Platform,
+    Settings, SettingsPatch, settings,
 };
 use tauri::{AppHandle, Emitter, State};
 
@@ -14,6 +14,12 @@ use crate::{events, state::AppState};
 #[tauri::command]
 pub fn app_info() -> AppInfo {
     AppInfo::new(env!("CARGO_PKG_VERSION"))
+}
+
+/// How this copy of the launcher was installed and whether the in-app updater may replace it.
+#[tauri::command]
+pub fn install_info() -> InstallInfo {
+    InstallInfo::detect()
 }
 
 /// Returns all settings.

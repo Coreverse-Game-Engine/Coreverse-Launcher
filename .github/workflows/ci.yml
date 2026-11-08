@@ -22,6 +22,21 @@ env:
     PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
 
 jobs:
+    release-tooling:
+        name: Release tooling (scripts, shell)
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v5
+
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+
+            - run: node scripts/release/check-version.mjs
+            - run: node --test "scripts/**/*.test.mjs"
+            - name: Lint the shell scripts
+              run: shellcheck -s bash scripts/package/*.sh && shellcheck -s sh scripts/install/install.sh
+
     frontend:
         name: Frontend (format, lint, types, tests, build)
         runs-on: ubuntu-latest
@@ -122,9 +137,10 @@ jobs:
                           pacman -Syu --noconfirm --needed git curl wget file base-devel pkgconf
                           webkit2gtk-4.1 openssl libappindicator-gtk3 librsvg xdotool dbus
                     - name: openSUSE
-                      image: opensuse/tumbleweed:latest
-                        # Capabilities instead of package names: Tumbleweed renames the WebKitGTK
-                        # development packages from time to time, the pkg-config names stay.
+                      image:
+                          opensuse/tumbleweed:latest
+                          # Capabilities instead of package names: Tumbleweed renames the WebKitGTK
+                          # development packages from time to time, the pkg-config names stay.
                       install: >-
                           zypper --non-interactive install bash git curl wget file tar gzip gcc gcc-c++
                           make pkgconf-pkg-config "pkgconfig(webkit2gtk-4.1)" "pkgconfig(gtk+-3.0)"

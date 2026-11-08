@@ -120,5 +120,34 @@
             "generic": "Bir şeyler ters gitti. Lütfen tekrar dene.",
             "callback": "Tarayıcı ile giriş başarısız oldu: {{message}}"
         }
+    },
+    "updates": {
+        "title": "Güncellemeler",
+        "currentVersion": "Kurulu sürüm: {{version}}",
+        "browserOnly": "Güncellemeler yalnızca masaüstü uygulamasında kullanılabilir.",
+        "check": "Güncellemeleri denetle",
+        "checking": "Güncellemeler denetleniyor…",
+        "upToDate": "En son sürümü kullanıyorsun.",
+        "available": "{{version}} sürümü hazır.",
+        "notesTitle": "Yenilikler",
+        "install": "İndir ve kur",
+        "downloading": "Güncelleme indiriliyor",
+        "installing": "Güncelleme kuruluyor…",
+        "ready": "Güncelleme kuruldu. Kullanmak için başlatıcıyı yeniden başlat.",
+        "restart": "Şimdi yeniden başlat",
+        "bannerAvailable": "{{version}} sürümü hazır",
+        "bannerReady": "Güncelleme kuruldu",
+        "details": "Ayrıntılar",
+        "releasesPage": "Sürümler sayfasını aç",
+        "manual": {
+            "systemPackage": "Bu kopya bir sistem paketinden (.deb, .rpm veya pacman) kurulmuş, bu yüzden kendini güncelleyemez. Yeni paketi sürümler sayfasından indir veya kurulum betiğini yeniden çalıştır.",
+            "scoop": "Bu kopyayı Scoop yönetiyor. Şu komutla güncelle: scoop update coreverse-launcher",
+            "unmanaged": "Bu kopya bir yükleyiciyle kurulmamış, bu yüzden kendini güncelleyemez. En son sürümü sürümler sayfasından indir."
+        },
+        "errors": {
+            "update_not_supported": "Bu kurulum kendini güncelleyemez.",
+            "update_failed": "Güncelleme denetlenemedi veya kurulamadı. Bağlantını kontrol edip tekrar dene.",
+            "no_pending_update": "Kurulacak bir güncelleme yok. Önce güncellemeleri denetle."
+        }
     }
 }

@@ -5,3 +5,7 @@ src-tauri/gen/
 pnpm-lock.yaml
 Cargo.lock
 LICENSE
+release-assets/
+release-meta/
+# Plain Node scripts for releases, formatted by hand.
+scripts/

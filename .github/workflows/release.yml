@@ -1,0 +1,285 @@
+name: Release
+
+# A tag like v0.1.0 builds every platform and prepares a DRAFT release. Publish the draft to
+# make it visible to the updater and to start the Distribute workflow (winget, Scoop, ...).
+# Run it by hand to rehearse: without "publish" nothing is created, the files stay attached to
+# the workflow run.
+on:
+    push:
+        tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+    workflow_dispatch:
+        inputs:
+            publish:
+                description: Create the draft release (otherwise only build)
+                type: boolean
+                default: false
+
+concurrency:
+    group: release-${{ github.ref }}
+    cancel-in-progress: false
+
+permissions:
+    contents: read
+    packages: read
+
+env:
+    CARGO_TERM_COLOR: always
+    PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+    # Signs the updater files. Generate the key with `pnpm tauri signer generate`.
+    TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+    TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+jobs:
+    verify:
+        name: Verify the version
+        runs-on: ubuntu-latest
+        outputs:
+            version: ${{ steps.version.outputs.version }}
+        steps:
+            - uses: actions/checkout@v5
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+            - name: Check versions, updater key and changelog
+              run: |
+                  if [ "${GITHUB_REF_TYPE}" = tag ]; then
+                      node scripts/release/check-version.mjs --release --tag "${GITHUB_REF_NAME}"
+                  else
+                      node scripts/release/check-version.mjs --release
+                  fi
+            - name: Test the release scripts
+              run: node --test "scripts/**/*.test.mjs"
+            - id: version
+              run: echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+    linux:
+        name: Linux ${{ matrix.arch }}
+        needs: verify
+        runs-on: ${{ matrix.runner }}
+        # Built on Debian 12 so the binary only needs glibc 2.36 and runs on every
+        # distribution that is newer than that.
+        container: debian:12
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - { arch: x86_64, runner: ubuntu-24.04 }
+                    - { arch: arm64, runner: ubuntu-24.04-arm }
+        env:
+            APPIMAGE_EXTRACT_AND_RUN: "1"
+            NO_STRIP: "true"
+        steps:
+            - name: Install system packages
+              run: |
+                  apt-get update
+                  apt-get install -y --no-install-recommends git ca-certificates curl wget file xz-utils \
+                      build-essential pkg-config libwebkit2gtk-4.1-dev libxdo-dev libssl-dev \
+                      libayatana-appindicator3-dev librsvg2-dev libdbus-1-dev rpm zstd binutils
+
+            - uses: actions/checkout@v5
+
+            - name: Install Rust
+              run: |
+                  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
+                  for tool in cargo rustc rustup; do
+                      ln -sf "$HOME/.cargo/bin/$tool" "/usr/local/bin/$tool"
+                  done
+
+            - uses: pnpm/action-setup@v4
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+                  cache: pnpm
+            - name: Authenticate to GitHub Packages
+              run: echo "//npm.pkg.github.com/:_authToken=${PACKAGES_TOKEN}" >> ~/.npmrc
+            - run: pnpm install --frozen-lockfile
+
+            - name: Build the .deb and the AppImage
+              run: pnpm tauri build --config src-tauri/tauri.release.conf.json
+
+            - name: Stage the files and build the .rpm and the pacman package
+              run: |
+                  node scripts/release/stage-assets.mjs --os linux --arch ${{ matrix.arch }} \
+                      --bundle-dir target/release/bundle --out release-assets
+                  deb=$(ls release-assets/*.deb)
+                  bash scripts/package/repack-linux.sh --deb "$deb" --format rpm --out release-assets
+                  bash scripts/package/repack-linux.sh --deb "$deb" --format pacman --out release-assets
+
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: assets-linux-${{ matrix.arch }}
+                  path: release-assets/*
+                  if-no-files-found: error
+
+    windows:
+        name: Windows ${{ matrix.arch }}
+        needs: verify
+        runs-on: windows-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - { arch: x86_64, target: x86_64-pc-windows-msvc }
+                    # Cross-compiled on the x64 runner.
+                    - { arch: arm64, target: aarch64-pc-windows-msvc }
+        env:
+            # Optional Authenticode signing: a base64 .pfx and its password.
+            WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+            WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        steps:
+            - uses: actions/checkout@v5
+            - uses: dtolnay/rust-toolchain@stable
+              with:
+                  targets: ${{ matrix.target }}
+            - uses: Swatinem/rust-cache@v2
+              with:
+                  key: ${{ matrix.target }}
+            - uses: pnpm/action-setup@v4
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+                  cache: pnpm
+            - name: Authenticate to GitHub Packages
+              shell: bash
+              run: echo "//npm.pkg.github.com/:_authToken=${PACKAGES_TOKEN}" >> ~/.npmrc
+            - run: pnpm install --frozen-lockfile
+
+            - name: Import the code signing certificate
+              if: ${{ env.WINDOWS_CERTIFICATE != '' }}
+              shell: pwsh
+              run: |
+                  $path = Join-Path $env:RUNNER_TEMP "codesign.pfx"
+                  [IO.File]::WriteAllBytes($path, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
+                  $password = ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force
+                  $certificate = Import-PfxCertificate -FilePath $path -CertStoreLocation Cert:\CurrentUser\My -Password $password
+                  Remove-Item $path
+                  "WINDOWS_CERTIFICATE_THUMBPRINT=$($certificate.Thumbprint)" >> $env:GITHUB_ENV
+
+            - name: Build the MSI
+              shell: bash
+              run: |
+                  args=(--target ${{ matrix.target }} --config src-tauri/tauri.release.conf.json)
+                  if [ -n "${WINDOWS_CERTIFICATE_THUMBPRINT:-}" ]; then
+                      echo "{\"bundle\":{\"windows\":{\"certificateThumbprint\":\"${WINDOWS_CERTIFICATE_THUMBPRINT}\"}}}" > src-tauri/tauri.sign.conf.json
+                      args+=(--config src-tauri/tauri.sign.conf.json)
+                  fi
+                  pnpm tauri build "${args[@]}"
+
+            - name: Stage the files and zip the portable build for Scoop
+              shell: pwsh
+              run: |
+                  node scripts/release/stage-assets.mjs --os windows --arch ${{ matrix.arch }} --bundle-dir target/${{ matrix.target }}/release/bundle --out release-assets
+                  $version = "${{ needs.verify.outputs.version }}"
+                  Compress-Archive -Path "target/${{ matrix.target }}/release/coreverse-launcher.exe", "LICENSE" -DestinationPath "release-assets/Coreverse-Launcher_${version}_windows_${{ matrix.arch }}.zip"
+
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: assets-windows-${{ matrix.arch }}
+                  path: release-assets/*
+                  if-no-files-found: error
+
+    macos:
+        name: macOS ${{ matrix.arch }}
+        needs: verify
+        runs-on: ${{ matrix.runner }}
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - { arch: x86_64, runner: macos-15-intel, target: x86_64-apple-darwin }
+                    - { arch: arm64, runner: macos-latest, target: aarch64-apple-darwin }
+        steps:
+            - uses: actions/checkout@v5
+            - uses: dtolnay/rust-toolchain@stable
+              with:
+                  targets: ${{ matrix.target }}
+            - uses: Swatinem/rust-cache@v2
+              with:
+                  key: ${{ matrix.target }}
+            - uses: pnpm/action-setup@v4
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+                  cache: pnpm
+            - name: Authenticate to GitHub Packages
+              run: echo "//npm.pkg.github.com/:_authToken=${PACKAGES_TOKEN}" >> ~/.npmrc
+            - run: pnpm install --frozen-lockfile
+
+            # Optional: without the secrets the app is built unsigned.
+            - name: Import the Apple certificates
+              env:
+                  APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+                  APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+                  APPLE_INSTALLER_CERTIFICATE: ${{ secrets.APPLE_INSTALLER_CERTIFICATE }}
+                  APPLE_ID: ${{ secrets.APPLE_ID }}
+                  APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+                  APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+              run: bash scripts/package/macos-keychain.sh
+
+            - name: Build the app and the DMG (signed and notarized when possible)
+              run: pnpm tauri build --target ${{ matrix.target }} --config src-tauri/tauri.release.conf.json
+
+            - name: Stage the files and build the PKG
+              run: |
+                  bundle="target/${{ matrix.target }}/release/bundle"
+                  node scripts/release/stage-assets.mjs --os macos --arch ${{ matrix.arch }} \
+                      --bundle-dir "$bundle" --out release-assets
+                  bash scripts/package/macos-pkg.sh --app "$bundle/macos/Coreverse Launcher.app" \
+                      --version "${{ needs.verify.outputs.version }}" \
+                      --out "release-assets/Coreverse-Launcher_${{ needs.verify.outputs.version }}_macos_${{ matrix.arch }}.pkg"
+
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: assets-macos-${{ matrix.arch }}
+                  path: release-assets/*
+                  if-no-files-found: error
+
+    publish:
+        name: Prepare the release
+        needs: [verify, linux, windows, macos]
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        env:
+            GH_TOKEN: ${{ github.token }}
+            VERSION: ${{ needs.verify.outputs.version }}
+            GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+            GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        steps:
+            - uses: actions/checkout@v5
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+            - run: sudo apt-get update && sudo apt-get install -y msitools
+            - uses: actions/download-artifact@v4
+              with:
+                  pattern: assets-*
+                  path: release-assets
+                  merge-multiple: true
+
+            - name: Generate checksums, latest.json, downloads.json and the package manifests
+              run: node scripts/release/make-release.mjs --assets release-assets --tag "v${VERSION}" --out release-meta
+
+            - name: Sign the checksums with GPG (optional)
+              if: ${{ env.GPG_PRIVATE_KEY != '' }}
+              run: |
+                  echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+                  gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" \
+                      --armor --detach-sign --output release-meta/SHA256SUMS.asc release-meta/SHA256SUMS
+
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: release-meta
+                  path: release-meta
+
+            - name: Create the draft release
+              if: ${{ github.event_name == 'push' || inputs.publish }}
+              run: |
+                  files=(release-assets/* release-meta/SHA256SUMS release-meta/latest.json release-meta/downloads.json release-meta/install.sh)
+                  if [ -f release-meta/SHA256SUMS.asc ]; then files+=(release-meta/SHA256SUMS.asc); fi
+                  if gh release view "v${VERSION}" >/dev/null 2>&1; then
+                      gh release upload "v${VERSION}" "${files[@]}" --clobber
+                  else
+                      gh release create "v${VERSION}" "${files[@]}" --draft --target "$GITHUB_SHA" \
+                          --title "Coreverse Launcher ${VERSION}" --notes-file release-meta/release-notes.md
+                  fi

@@ -7,3 +7,6 @@ pub const SETTINGS_CHANGED: &str = "settings-changed";
 
 /// Emitted with an `InstallEvent` payload while an engine installation runs.
 pub const ENGINE_INSTALL: &str = "engine-install-event";
+
+/// Emitted with an `UpdateEvent` payload while an update downloads.
+pub const UPDATE: &str = "update-event";

@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 
+import { UpdateCard } from "@/components/update-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -65,6 +66,7 @@ export function SettingsPage() {
                     </section>
                 </CardContent>
             </Card>
+            <UpdateCard />
         </div>
     );
 }

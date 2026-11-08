@@ -1,6 +1,7 @@
 mod commands;
 mod events;
 mod state;
+mod updates;
 
 use launcher_core::{Database, logging};
 use tauri::Manager;
@@ -34,6 +35,7 @@ pub fn run() {
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             let log_guard = logging::init(&app.path().app_log_dir()?)?;
 
@@ -51,10 +53,12 @@ pub fn run() {
                 "Coreverse Launcher started"
             );
             app.manage(AppState::new(db, log_guard, &data_dir)?);
+            app.manage(updates::PendingUpdate::default());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             commands::app_info,
+            commands::install_info,
             commands::get_settings,
             commands::update_settings,
             commands::load_refresh_token,
@@ -67,6 +71,9 @@ pub fn run() {
             commands::cancel_install,
             commands::uninstall_engine,
             commands::install_engine,
+            updates::check_for_update,
+            updates::install_update,
+            updates::restart_app,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Coreverse Launcher");

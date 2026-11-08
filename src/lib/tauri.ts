@@ -206,3 +206,67 @@ export async function onInstallEvent(handler: (event: InstallEvent) => void): Pr
     }
     return listen<InstallEvent>(ENGINE_INSTALL_EVENT, (event) => handler(event.payload));
 }
+
+/** Mirrors `launcher_core::InstallChannel`. */
+export type InstallChannel = "installer" | "appImage" | "systemPackage" | "scoop" | "unmanaged";
+
+/** Mirrors `launcher_core::InstallInfo`. */
+export interface InstallInfo {
+    channel: InstallChannel;
+    /** Whether the in-app updater may replace this installation. */
+    selfUpdate: boolean;
+}
+
+/** Mirrors `updates::UpdateInfo` in `src-tauri/src/updates.rs`. */
+export interface UpdateInfo {
+    version: string;
+    currentVersion: string;
+    notes: string | null;
+}
+
+/** Mirrors `updates::UpdateEvent`. */
+export type UpdateEvent =
+    { type: "progress"; downloaded: number; total: number | null } | { type: "installing" };
+
+/** Mirrors `events::UPDATE` in `src-tauri/src/events.rs`. */
+export const UPDATE_EVENT = "update-event";
+
+/** How this copy was installed. `null` in a plain browser. */
+export async function getInstallInfo(): Promise<InstallInfo | null> {
+    if (!isTauri()) {
+        return null;
+    }
+    return invoke<InstallInfo>("install_info");
+}
+
+/** Asks the update server for a newer version. `null` means this one is current. */
+export async function checkForUpdate(): Promise<UpdateInfo | null> {
+    if (!isTauri()) {
+        return null;
+    }
+    return invoke<UpdateInfo | null>("check_for_update");
+}
+
+/** Downloads and installs the update the last check found. Progress arrives as events. */
+export async function installUpdate(): Promise<void> {
+    if (!isTauri()) {
+        throw new Error("Updating needs the desktop app.");
+    }
+    await invoke("install_update");
+}
+
+/** Restarts the launcher. */
+export async function restartApp(): Promise<void> {
+    if (!isTauri()) {
+        return;
+    }
+    await invoke("restart_app");
+}
+
+/** Subscribes to update events. Resolves to the function that unsubscribes again. */
+export async function onUpdateEvent(handler: (event: UpdateEvent) => void): Promise<() => void> {
+    if (!isTauri()) {
+        return () => undefined;
+    }
+    return listen<UpdateEvent>(UPDATE_EVENT, (event) => handler(event.payload));
+}

@@ -83,6 +83,15 @@ pub enum Error {
 
     #[error("the download has the wrong size (expected {expected} bytes, got {actual})")]
     SizeMismatch { expected: u64, actual: u64 },
+
+    #[error("this installation cannot update itself")]
+    UpdateNotSupported,
+
+    #[error("the update failed: {0}")]
+    Update(String),
+
+    #[error("there is no update to install; check for updates first")]
+    NoPendingUpdate,
 }
 
 impl Error {
@@ -112,6 +121,9 @@ impl Error {
             Self::UnsafeArchive(_) => "unsafe_archive",
             Self::ChecksumMismatch => "checksum_mismatch",
             Self::SizeMismatch { .. } => "size_mismatch",
+            Self::UpdateNotSupported => "update_not_supported",
+            Self::Update(_) => "update_failed",
+            Self::NoPendingUpdate => "no_pending_update",
         }
     }
 }

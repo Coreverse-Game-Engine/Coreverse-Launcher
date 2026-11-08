@@ -1,0 +1,151 @@
+name: Distribute
+
+# Runs when a release is published (and by hand): pushes the new version to Homebrew, Scoop,
+# the AUR and winget. Every channel is optional and only runs when its secret exists.
+on:
+    release:
+        types: [published]
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: Release tag (vX.Y.Z)
+                required: true
+
+permissions:
+    contents: read
+
+env:
+    TAG: ${{ inputs.tag || github.event.release.tag_name }}
+
+jobs:
+    manifests:
+        name: Render the manifests
+        runs-on: ubuntu-latest
+        env:
+            GH_TOKEN: ${{ github.token }}
+        steps:
+            - uses: actions/checkout@v5
+              with:
+                  ref: ${{ env.TAG }}
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+            - run: sudo apt-get update && sudo apt-get install -y msitools
+            - name: Download the published release
+              run: gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir assets --clobber
+            - name: Render the manifests from the published files
+              run: |
+                  mkdir assets-only
+                  for file in assets/Coreverse-Launcher_*; do cp "$file" assets-only/; done
+                  node scripts/release/make-release.mjs --assets assets-only --tag "$TAG" --out meta
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: package-manifests
+                  path: meta/manifests
+
+    homebrew:
+        name: Homebrew tap
+        needs: manifests
+        runs-on: ubuntu-latest
+        env:
+            TAP_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+        steps:
+            - uses: actions/download-artifact@v4
+              if: ${{ env.TAP_TOKEN != '' }}
+              with:
+                  name: package-manifests
+                  path: manifests
+            - uses: actions/checkout@v5
+              if: ${{ env.TAP_TOKEN != '' }}
+              with:
+                  repository: Coreverse-Game-Engine/homebrew-tap
+                  token: ${{ secrets.TAP_GITHUB_TOKEN }}
+                  path: tap
+            - name: Update the cask
+              if: ${{ env.TAP_TOKEN != '' }}
+              run: |
+                  mkdir -p tap/Casks
+                  cp manifests/homebrew/coreverse-launcher.rb tap/Casks/coreverse-launcher.rb
+                  cd tap
+                  git config user.name "coreverse-release-bot"
+                  git config user.email "release-bot@users.noreply.github.com"
+                  git add Casks/coreverse-launcher.rb
+                  git diff --cached --quiet || { git commit -m "coreverse-launcher ${TAG#v}" && git push; }
+
+    scoop:
+        name: Scoop bucket
+        needs: manifests
+        runs-on: ubuntu-latest
+        env:
+            BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+        steps:
+            - uses: actions/download-artifact@v4
+              if: ${{ env.BUCKET_TOKEN != '' }}
+              with:
+                  name: package-manifests
+                  path: manifests
+            - uses: actions/checkout@v5
+              if: ${{ env.BUCKET_TOKEN != '' }}
+              with:
+                  repository: Coreverse-Game-Engine/scoop-bucket
+                  token: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+                  path: bucket
+            - name: Update the manifest
+              if: ${{ env.BUCKET_TOKEN != '' }}
+              run: |
+                  mkdir -p bucket/bucket
+                  cp manifests/scoop/coreverse-launcher.json bucket/bucket/coreverse-launcher.json
+                  cd bucket
+                  git config user.name "coreverse-release-bot"
+                  git config user.email "release-bot@users.noreply.github.com"
+                  git add bucket/coreverse-launcher.json
+                  git diff --cached --quiet || { git commit -m "coreverse-launcher ${TAG#v}" && git push; }
+
+    aur:
+        name: AUR
+        needs: manifests
+        runs-on: ubuntu-latest
+        env:
+            AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        steps:
+            - uses: actions/download-artifact@v4
+              if: ${{ env.AUR_SSH_PRIVATE_KEY != '' }}
+              with:
+                  name: package-manifests
+                  path: manifests
+            - name: Push PKGBUILD and .SRCINFO
+              if: ${{ env.AUR_SSH_PRIVATE_KEY != '' }}
+              run: |
+                  mkdir -p ~/.ssh
+                  echo "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/aur
+                  chmod 600 ~/.ssh/aur
+                  ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+                  export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/aur -o IdentitiesOnly=yes"
+                  git clone ssh://aur@aur.archlinux.org/coreverse-launcher-bin.git aur
+                  cp manifests/aur/PKGBUILD manifests/aur/.SRCINFO aur/
+                  cd aur
+                  git config user.name "coreverse-release-bot"
+                  git config user.email "release-bot@users.noreply.github.com"
+                  git add PKGBUILD .SRCINFO
+                  git diff --cached --quiet || { git commit -m "Update to ${TAG#v}" && git push origin HEAD:master; }
+
+    winget:
+        name: winget
+        needs: manifests
+        runs-on: windows-latest
+        env:
+            WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        steps:
+            # `wingetcreate update` needs the package to exist: the first submission is manual
+            # (see docs/releasing.md); the rendered manifests are in the package-manifests artifact.
+            - name: Submit the update
+              if: ${{ env.WINGET_TOKEN != '' }}
+              shell: pwsh
+              run: |
+                  $version = $env:TAG.TrimStart("v")
+                  $base = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:TAG"
+                  Invoke-WebRequest https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
+                  ./wingetcreate.exe update Coreverse.Launcher --version $version `
+                      --urls "$base/Coreverse-Launcher_${version}_windows_x86_64.msi|x64" `
+                             "$base/Coreverse-Launcher_${version}_windows_arm64.msi|arm64" `
+                      --submit --token $env:WINGET_TOKEN

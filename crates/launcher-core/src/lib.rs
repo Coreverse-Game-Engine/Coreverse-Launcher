@@ -7,6 +7,7 @@
 mod database;
 pub mod engine;
 mod error;
+pub mod install_channel;
 pub mod logging;
 mod migrations;
 pub mod platform;
@@ -20,6 +21,7 @@ pub use engine::{
     EngineService, EventSink, InstallEvent, InstallPhase, InstallStatus, InstalledEngine,
 };
 pub use error::{Error, ErrorInfo, Result};
+pub use install_channel::{InstallChannel, InstallInfo};
 pub use logging::LogGuard;
 pub use platform::Platform;
 pub use secrets::RefreshTokenStore;

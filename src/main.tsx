@@ -10,6 +10,7 @@ import { AuthProvider } from "@/components/auth-provider";
 import { EnginesProvider } from "@/components/engines-provider";
 import { SettingsBridge } from "@/components/settings-bridge";
 import { ThemeProvider } from "@/components/theme-provider";
+import { UpdatesProvider } from "@/components/updates-provider";
 import { configureDb } from "@/lib/db";
 import { applyTheme, readStoredTheme } from "@/lib/theme";
 
@@ -29,9 +30,11 @@ createRoot(container).render(
             <SettingsBridge />
             <AuthProvider>
                 <EnginesProvider>
-                    <HashRouter>
-                        <App />
-                    </HashRouter>
+                    <UpdatesProvider>
+                        <HashRouter>
+                            <App />
+                        </HashRouter>
+                    </UpdatesProvider>
                 </EnginesProvider>
             </AuthProvider>
         </ThemeProvider>

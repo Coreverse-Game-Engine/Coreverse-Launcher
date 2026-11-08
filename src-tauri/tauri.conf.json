@@ -2,6 +2,7 @@
     "$schema": "https://schema.tauri.app/config/2",
     "productName": "Coreverse Launcher",
     "identifier": "com.coreverse.launcher",
+    "version": "../package.json",
     "build": {
         "beforeDevCommand": "pnpm dev",
         "devUrl": "http://localhost:1420",
@@ -29,12 +30,24 @@
             "desktop": {
                 "schemes": ["coreverse-launcher"]
             }
+        },
+        "updater": {
+            "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEExNzNEMEJGRTcyRUMxRDIKUldUU3dTN252OUJ6b1pmUU5zMHlLRGtVZSsxM3ZEREZqNmgxU0M0c3Z3YWpFUHljbXFTN2VkU2UK",
+            "endpoints": [
+                "https://github.com/Coreverse-Game-Engine/Coreverse-Launcher/releases/latest/download/latest.json"
+            ],
+            "windows": {
+                "installMode": "passive"
+            }
         }
     },
     "bundle": {
         "active": true,
-        "targets": "all",
         "category": "Game",
+        "publisher": "Coreverse",
+        "copyright": "Copyright (C) 2026 Coreverse",
+        "shortDescription": "The official launcher of the Coreverse ecosystem",
+        "longDescription": "Coreverse Launcher installs and manages Coreverse Engine versions and signs you in to your Coreverse account.",
         "icon": [
             "icons/32x32.png",
             "icons/128x128.png",

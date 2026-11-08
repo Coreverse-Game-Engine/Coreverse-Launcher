@@ -26,7 +26,11 @@
         "rust:fmt:check": "cargo fmt --all --check",
         "rust:clippy": "cargo clippy --workspace --all-targets -- -D warnings",
         "rust:test": "cargo test --workspace",
-        "verify": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build && pnpm run rust:fmt:check && pnpm run rust:clippy && pnpm run rust:test"
+        "release:bump": "node scripts/release/bump-version.mjs",
+        "release:check": "node scripts/release/check-version.mjs",
+        "release:pubkey": "node scripts/release/set-updater-pubkey.mjs",
+        "release:test": "node --test \"scripts/**/*.test.mjs\"",
+        "verify": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build && pnpm run rust:fmt:check && pnpm run rust:clippy && pnpm run rust:test && pnpm run release:check && pnpm run release:test"
     },
     "dependencies": {
         "@Coreverse-Game-Engine/db-client": "^0.5.5",
