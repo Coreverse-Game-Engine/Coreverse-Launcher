@@ -719,7 +719,7 @@ dependencies = [
 
 [[package]]
 name = "coreverse-launcher"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "launcher-core",
  "serde",
@@ -2334,7 +2334,7 @@ dependencies = [
 
 [[package]]
 name = "launcher-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "flate2",
  "futures-util",
