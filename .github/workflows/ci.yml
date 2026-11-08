@@ -43,12 +43,12 @@ jobs:
         steps:
             - uses: actions/checkout@v5
 
-            - uses: pnpm/action-setup@v4
-
             - uses: actions/setup-node@v5
               with:
                   node-version: 22
-                  cache: pnpm
+
+            # pnpm comes from the `packageManager` field of package.json.
+            - run: corepack enable
 
             - name: Authenticate to GitHub Packages
               run: echo "//npm.pkg.github.com/:_authToken=${PACKAGES_TOKEN}" >> ~/.npmrc
@@ -137,10 +137,9 @@ jobs:
                           pacman -Syu --noconfirm --needed git curl wget file base-devel pkgconf
                           webkit2gtk-4.1 openssl libappindicator-gtk3 librsvg xdotool dbus
                     - name: openSUSE
-                      image:
-                          opensuse/tumbleweed:latest
-                          # Capabilities instead of package names: Tumbleweed renames the WebKitGTK
-                          # development packages from time to time, the pkg-config names stay.
+                      image: opensuse/tumbleweed:latest
+                        # Capabilities instead of package names: Tumbleweed renames the WebKitGTK
+                        # development packages from time to time, the pkg-config names stay.
                       install: >-
                           zypper --non-interactive install bash git curl wget file tar gzip gcc gcc-c++
                           make pkgconf-pkg-config "pkgconfig(webkit2gtk-4.1)" "pkgconfig(gtk+-3.0)"

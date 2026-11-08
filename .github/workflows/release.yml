@@ -85,11 +85,12 @@ jobs:
                       ln -sf "$HOME/.cargo/bin/$tool" "/usr/local/bin/$tool"
                   done
 
-            - uses: pnpm/action-setup@v4
             - uses: actions/setup-node@v5
               with:
                   node-version: 22
-                  cache: pnpm
+
+            # pnpm comes from the `packageManager` field of package.json.
+            - run: corepack enable
             - name: Authenticate to GitHub Packages
               run: echo "//npm.pkg.github.com/:_authToken=${PACKAGES_TOKEN}" >> ~/.npmrc
             - run: pnpm install --frozen-lockfile
@@ -134,11 +135,12 @@ jobs:
             - uses: Swatinem/rust-cache@v2
               with:
                   key: ${{ matrix.target }}
-            - uses: pnpm/action-setup@v4
             - uses: actions/setup-node@v5
               with:
                   node-version: 22
-                  cache: pnpm
+
+            # pnpm comes from the `packageManager` field of package.json.
+            - run: corepack enable
             - name: Authenticate to GitHub Packages
               shell: bash
               run: echo "//npm.pkg.github.com/:_authToken=${PACKAGES_TOKEN}" >> ~/.npmrc
@@ -196,11 +198,12 @@ jobs:
             - uses: Swatinem/rust-cache@v2
               with:
                   key: ${{ matrix.target }}
-            - uses: pnpm/action-setup@v4
             - uses: actions/setup-node@v5
               with:
                   node-version: 22
-                  cache: pnpm
+
+            # pnpm comes from the `packageManager` field of package.json.
+            - run: corepack enable
             - name: Authenticate to GitHub Packages
               run: echo "//npm.pkg.github.com/:_authToken=${PACKAGES_TOKEN}" >> ~/.npmrc
             - run: pnpm install --frozen-lockfile
