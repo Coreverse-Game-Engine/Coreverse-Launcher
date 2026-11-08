@@ -28,7 +28,7 @@ jobs:
         steps:
             - uses: actions/checkout@v5
 
-            - uses: actions/setup-node@v5
+            - uses: actions/setup-node@v7
               with:
                   node-version: 22
                   # Without this v5 turns caching on by itself (packageManager is set) and needs pnpm already.
@@ -45,7 +45,7 @@ jobs:
         steps:
             - uses: actions/checkout@v5
 
-            - uses: actions/setup-node@v5
+            - uses: actions/setup-node@v7
               with:
                   node-version: 22
                   # Without this v5 turns caching on by itself (packageManager is set) and needs pnpm already.
