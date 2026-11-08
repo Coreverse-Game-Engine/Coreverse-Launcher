@@ -3,7 +3,11 @@
         "targets": ["msi"],
         "windows": {
             "digestAlgorithm": "sha256",
-            "timestampUrl": "http://timestamp.digicert.com"
+            "timestampUrl": "http://timestamp.digicert.com",
+            "wix": {
+                "bannerPath": "wix/banner.bmp",
+                "dialogImagePath": "wix/dialog.bmp"
+            }
         }
     }
 }

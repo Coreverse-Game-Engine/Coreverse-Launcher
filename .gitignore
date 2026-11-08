@@ -68,6 +68,7 @@ Desktop.ini
 .env
 .env.*
 !.env.example
+!.env.production
 
 # ------------------------------------------------------------
 # Archives

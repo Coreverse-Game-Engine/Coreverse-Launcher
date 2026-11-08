@@ -52,6 +52,12 @@ export function collectProblems(root, { tag, release } = {}) {
         if (overlay.bundle?.createUpdaterArtifacts !== true) {
             problems.push("tauri.release.conf.json must set bundle.createUpdaterArtifacts.");
         }
+        const env = read(".env.production", root);
+        for (const name of ["PUBLIC_SUPABASE_URL", "PUBLIC_SUPABASE_ANON_KEY"]) {
+            if (!new RegExp(`^${name}=\\S+`, "m").test(env)) {
+                problems.push(`.env.production must set ${name}: release builds would not reach the DB.`);
+            }
+        }
         const section = changelogSection(read("CHANGELOG.md", root), packageVersion);
         if (!section) {
             problems.push(`CHANGELOG.md has no filled "## [${packageVersion}]" section.`);

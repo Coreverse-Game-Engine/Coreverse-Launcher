@@ -85,7 +85,7 @@ src/                    React UI (components, pages, i18n, theme)
 ## Accounts and sign-in
 
 Sign-in goes through Supabase Auth (email and password, GitHub, Google). Copy `.env.example`
-to `.env.local` and fill in the project URL and anon key; without them the Account page says
+to `.env.local` and fill in the project URL and anon key (release builds read the same public values from `.env.production`); without them the Account page says
 sign-in is not configured.
 
 - The variable names (`PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY`) are the same as in
