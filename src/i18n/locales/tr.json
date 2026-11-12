@@ -48,6 +48,7 @@
         "releasedOn": "Yayın tarihi: {{date}}",
         "install": "{{version}} sürümünü kur",
         "upToDate": "En son sürüm kurulu.",
+        "deletePrevious": "Kurulumdan sonra eski sürümü ({{version}}) sil",
         "noBuildForPlatform": "Bu sürümün henüz {{os}} ({{architecture}}) için derlemesi yok.",
         "installedTitle": "Kurulu olanlar",
         "installedOn": "Kurulum tarihi: {{date}}",
@@ -58,7 +59,10 @@
         "dismiss": "Kapat",
         "phase": {
             "preparing": "Hazırlanıyor…",
+            "planning": "Daha hızlı güncelleme aranıyor…",
             "downloading": "İndiriliyor",
+            "copying": "Kurulu sürüm kopyalanıyor",
+            "patching": "Güncelleme uygulanıyor",
             "verifying": "İndirme doğrulanıyor",
             "extracting": "Arşiv açılıyor",
             "finalizing": "Tamamlanıyor…"

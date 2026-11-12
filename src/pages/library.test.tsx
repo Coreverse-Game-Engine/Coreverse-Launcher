@@ -72,7 +72,49 @@ describe("LibraryPage", () => {
 
         await userEvent.click(await screen.findByRole("button", { name: "Install 2.0.0" }));
 
-        expect(engines.value.install).toHaveBeenCalledWith("2.0.0");
+        expect(engines.value.install).toHaveBeenCalledWith("2.0.0", { deletePrevious: false });
+    });
+
+    it("offers to delete the old version, unchecked by default", async () => {
+        engines.value = makeEngines({ latest: latestRelease, installed: [installedEngine] });
+        render(<LibraryPage />);
+
+        const checkbox = await screen.findByRole("checkbox", {
+            name: "Delete the old version (1.0.0) after installing",
+        });
+        expect(checkbox).not.toBeChecked();
+
+        await userEvent.click(screen.getByRole("button", { name: "Install 2.0.0" }));
+        expect(engines.value.install).toHaveBeenCalledWith("2.0.0", { deletePrevious: false });
+    });
+
+    it("installs with deletePrevious when the box is ticked", async () => {
+        engines.value = makeEngines({ latest: latestRelease, installed: [installedEngine] });
+        render(<LibraryPage />);
+
+        await userEvent.click(await screen.findByRole("checkbox"));
+        await userEvent.click(screen.getByRole("button", { name: "Install 2.0.0" }));
+
+        expect(engines.value.install).toHaveBeenCalledWith("2.0.0", { deletePrevious: true });
+    });
+
+    it("does not offer to delete anything when no older version is installed", async () => {
+        engines.value = makeEngines({ latest: latestRelease });
+        render(<LibraryPage />);
+
+        await screen.findByRole("button", { name: "Install 2.0.0" });
+        expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    });
+
+    it("shows the phases of an incremental update", async () => {
+        engines.value = makeEngines({
+            latest: latestRelease,
+            installed: [installedEngine],
+            progress: { version: "2.0.0", phase: "patching", done: 1, total: 4 },
+        });
+        render(<LibraryPage />);
+
+        expect(await screen.findByText(/Applying the update/)).toBeInTheDocument();
     });
 
     it("does not offer an install when the release has no build for this platform", async () => {

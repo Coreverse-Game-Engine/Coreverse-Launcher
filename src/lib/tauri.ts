@@ -127,7 +127,21 @@ export interface InstalledEngine {
     installedAt: string;
 }
 
-export type InstallPhase = "preparing" | "downloading" | "verifying" | "extracting" | "finalizing";
+export type InstallPhase =
+    | "preparing"
+    | "planning"
+    | "downloading"
+    | "copying"
+    | "patching"
+    | "verifying"
+    | "extracting"
+    | "finalizing";
+
+/** Mirrors `launcher_core::InstallOptions`. */
+export interface InstallOptions {
+    /** Remove the newest older version once the new one is installed. Off by default. */
+    deletePrevious?: boolean;
+}
 
 /** Mirrors `launcher_core::InstallStatus`. */
 export interface InstallStatus {
@@ -178,11 +192,17 @@ export async function getInstallStatus(): Promise<InstallStatus | null> {
 }
 
 /** Runs until the installation is over; progress arrives through `onInstallEvent`. */
-export async function installEngine(version: string): Promise<InstalledEngine> {
+export async function installEngine(
+    version: string,
+    options: InstallOptions = {},
+): Promise<InstalledEngine> {
     if (!isTauri()) {
         throw new Error("Installing engines needs the desktop app.");
     }
-    return invoke<InstalledEngine>("install_engine", { version });
+    return invoke<InstalledEngine>("install_engine", {
+        version,
+        deletePrevious: options.deletePrevious ?? false,
+    });
 }
 
 export async function cancelInstall(): Promise<boolean> {

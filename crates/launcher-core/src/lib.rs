@@ -18,7 +18,8 @@ use serde::Serialize;
 
 pub use database::Database;
 pub use engine::{
-    EngineService, EventSink, InstallEvent, InstallPhase, InstallStatus, InstalledEngine,
+    EngineService, EventSink, InstallEvent, InstallOptions, InstallPhase, InstallStatus,
+    InstalledEngine,
 };
 pub use error::{Error, ErrorInfo, Result};
 pub use install_channel::{InstallChannel, InstallInfo};

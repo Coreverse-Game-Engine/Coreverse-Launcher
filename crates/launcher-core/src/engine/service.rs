@@ -9,7 +9,7 @@ use std::{
 use reqwest::Url;
 
 use super::{
-    InstallEvent,
+    InstallEvent, InstallOptions,
     installer::{self, InstallContext},
     manager::{InstallManager, InstallStatus},
     progress::Reporter,
@@ -130,9 +130,15 @@ impl EngineService {
         store::delete(&self.db, &version)
     }
 
-    /// Downloads, verifies and installs `requested`. Progress and the outcome are also reported
-    /// through `events`.
-    pub async fn install(&self, requested: &str, events: EventSink) -> Result<InstalledEngine> {
+    /// Downloads, verifies and installs `requested`, as an incremental update of an older
+    /// installed version when possible. Progress and the outcome are also reported through
+    /// `events`.
+    pub async fn install(
+        &self,
+        requested: &str,
+        options: InstallOptions,
+        events: EventSink,
+    ) -> Result<InstalledEngine> {
         let version = normalize_version(requested)?;
         let api_base_url = self.api_base_url()?;
         let cancel = self.installs.begin(&version)?;
@@ -158,7 +164,7 @@ impl EngineService {
             paths: self.paths.clone(),
             db: self.db.clone(),
         };
-        let result = installer::install(&ctx, &version, &cancel, &reporter).await;
+        let result = installer::install(&ctx, &version, options, &cancel, &reporter).await;
         self.installs.finish();
 
         match &result {

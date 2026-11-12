@@ -4,9 +4,12 @@ import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useEngines } from "@/hooks/use-engines";
 import { formatBytes, percent } from "@/lib/format";
+import { previousVersion } from "@/lib/versions";
 
 function dateLabel(value: string, language: string): string {
     const date = new Date(value);
@@ -22,7 +25,10 @@ function InstallProgress() {
         return null;
     }
     const value = percent(progress.done, progress.total);
-    const showBytes = progress.phase === "downloading" || progress.phase === "verifying";
+    const showBytes =
+        progress.phase === "downloading" ||
+        progress.phase === "copying" ||
+        progress.phase === "verifying";
 
     return (
         <div className="flex flex-col gap-2">
@@ -75,6 +81,8 @@ function ErrorNotice() {
 function LatestReleaseCard() {
     const { t, i18n } = useTranslation();
     const { latest, installed, platform, progress, updateCheck, install } = useEngines();
+    // Off by default, and not remembered: removing a version should be a choice made each time.
+    const [deletePrevious, setDeletePrevious] = useState(false);
 
     const notice =
         updateCheck === "checking"
@@ -100,6 +108,7 @@ function LatestReleaseCard() {
         : undefined;
     const isInstalled = installed.some((engine) => engine.version === latest.version);
     const busy = progress !== null;
+    const previous = previousVersion(installed, latest.version, platform);
 
     return (
         <Card>
@@ -118,6 +127,18 @@ function LatestReleaseCard() {
                 ) : null}
                 {notice ? <p className="text-sm text-muted-foreground">{notice}</p> : null}
                 <InstallProgress />
+                {!busy && !isInstalled && artifact && previous ? (
+                    <div className="flex items-center gap-2">
+                        <Checkbox
+                            id="delete-previous"
+                            checked={deletePrevious}
+                            onChange={(event) => setDeletePrevious(event.target.checked)}
+                        />
+                        <Label htmlFor="delete-previous" className="font-normal">
+                            {t("library.deletePrevious", { version: previous })}
+                        </Label>
+                    </div>
+                ) : null}
                 {!busy ? (
                     <div className="flex items-center gap-3">
                         {isInstalled ? (
@@ -127,7 +148,11 @@ function LatestReleaseCard() {
                         ) : (
                             <Button
                                 disabled={!artifact}
-                                onClick={() => void install(latest.version)}
+                                onClick={() =>
+                                    void install(latest.version, {
+                                        deletePrevious: previous !== null && deletePrevious,
+                                    })
+                                }
                             >
                                 {t("library.install", { version: latest.version })}
                             </Button>

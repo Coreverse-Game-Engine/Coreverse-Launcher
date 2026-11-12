@@ -11,6 +11,14 @@ use tokio::{fs, io::AsyncWriteExt};
 use super::progress::{InstallPhase, Reporter};
 use crate::{Error, Result};
 
+/// Where one file sits inside a bigger progress bar: reports are `base + received` out of
+/// `total`. A plain download uses `base: 0` and the file size as `total`.
+#[derive(Debug, Clone, Copy)]
+pub struct ProgressSpan {
+    pub base: u64,
+    pub total: u64,
+}
+
 /// A connection that delivers nothing for this long is treated as dead.
 const STALL_TIMEOUT: Duration = Duration::from_secs(30);
 
@@ -25,6 +33,7 @@ pub async fn download(
     expected_size: u64,
     cancel: &AtomicBool,
     reporter: &Reporter,
+    span: ProgressSpan,
 ) -> Result<()> {
     if let Some(parent) = part_path.parent() {
         fs::create_dir_all(parent).await?;
@@ -40,7 +49,11 @@ pub async fn download(
     }
     if offset == expected_size {
         // A previous attempt already fetched everything; only verification is left.
-        reporter.phase(InstallPhase::Downloading, expected_size, expected_size);
+        reporter.phase(
+            InstallPhase::Downloading,
+            span.base + expected_size,
+            span.total,
+        );
         return Ok(());
     }
 
@@ -75,7 +88,7 @@ pub async fn download(
     };
 
     let mut received = offset;
-    reporter.phase(InstallPhase::Downloading, received, expected_size);
+    reporter.phase(InstallPhase::Downloading, span.base + received, span.total);
 
     let mut stream = response.bytes_stream();
     loop {
@@ -100,7 +113,7 @@ pub async fn download(
             });
         }
         file.write_all(&chunk).await?;
-        reporter.tick(InstallPhase::Downloading, received, expected_size);
+        reporter.tick(InstallPhase::Downloading, span.base + received, span.total);
     }
     file.flush().await?;
 
@@ -109,6 +122,6 @@ pub async fn download(
             "the download was interrupted; try again to resume it".to_owned(),
         ));
     }
-    reporter.phase(InstallPhase::Downloading, received, expected_size);
+    reporter.phase(InstallPhase::Downloading, span.base + received, span.total);
     Ok(())
 }

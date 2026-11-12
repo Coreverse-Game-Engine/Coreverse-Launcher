@@ -78,11 +78,27 @@ pub fn select_artifact(release: &ReleaseMetadata, platform: Platform) -> Result<
         })
 }
 
-fn is_sha256_hex(value: &str) -> bool {
+pub(super) fn is_sha256_hex(value: &str) -> bool {
     value.len() == 64
         && value
             .bytes()
             .all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
+}
+
+/// Checks the address of a file the launcher is about to download: `https` (plain `http` only in
+/// debug builds), a host, no embedded credentials. As for artifacts, the SHA-256 is the real
+/// security anchor.
+pub(super) fn validate_download_url(raw: &str) -> Result<Url> {
+    let url = Url::parse(raw).map_err(|_| Error::InvalidUrl(raw.to_owned()))?;
+    let scheme_ok = url.scheme() == "https" || (cfg!(debug_assertions) && url.scheme() == "http");
+    if !scheme_ok
+        || url.host_str().is_none()
+        || !url.username().is_empty()
+        || url.password().is_some()
+    {
+        return Err(Error::InvalidUrl(raw.to_owned()));
+    }
+    Ok(url)
 }
 
 /// Checks everything the installer relies on before a single byte is downloaded.

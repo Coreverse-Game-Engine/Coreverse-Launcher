@@ -3,6 +3,7 @@ import { isAuthError, isAuthRetryableFetchError } from "@supabase/supabase-js";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 
+import { GitHubIcon, GoogleIcon } from "@/components/brand/provider-icon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -122,9 +123,11 @@ function SignInCard() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                     <Button variant="outline" disabled={busy} onClick={() => onProvider("github")}>
+                        <GitHubIcon />
                         GitHub
                     </Button>
                     <Button variant="outline" disabled={busy} onClick={() => onProvider("google")}>
+                        <GoogleIcon />
                         Google
                     </Button>
                 </div>

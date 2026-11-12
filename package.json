@@ -33,7 +33,7 @@
         "verify": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build && pnpm run rust:fmt:check && pnpm run rust:clippy && pnpm run rust:test && pnpm run release:check && pnpm run release:test"
     },
     "dependencies": {
-        "@Coreverse-Game-Engine/db-client": "^0.5.5",
+        "@Coreverse-Game-Engine/db-client": "^0.6.0",
         "@radix-ui/react-dropdown-menu": "^2.1.0",
         "@radix-ui/react-separator": "^1.1.0",
         "@radix-ui/react-slot": "^1.1.0",

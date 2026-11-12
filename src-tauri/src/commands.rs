@@ -3,8 +3,8 @@
 use std::sync::Arc;
 
 use launcher_core::{
-    AppInfo, Error, EventSink, InstallEvent, InstallInfo, InstallStatus, InstalledEngine, Platform,
-    Settings, SettingsPatch, settings,
+    AppInfo, Error, EventSink, InstallEvent, InstallInfo, InstallOptions, InstallStatus,
+    InstalledEngine, Platform, Settings, SettingsPatch, settings,
 };
 use tauri::{AppHandle, Emitter, State};
 
@@ -126,13 +126,16 @@ pub fn uninstall_engine(state: State<'_, AppState>, version: String) -> Result<(
         .inspect_err(|error| tracing::error!(%error, version, "failed to uninstall the engine"))
 }
 
-/// Downloads, verifies and installs an engine version. Progress arrives as
-/// `engine-install-event` events; the call returns when the installation is over.
+/// Downloads, verifies and installs an engine version, as an incremental update of an older
+/// installed version when possible. With `delete_previous` (JS: `deletePrevious`) the older
+/// version is removed afterwards. Progress arrives as `engine-install-event` events; the call
+/// returns when the installation is over.
 #[tauri::command]
 pub async fn install_engine(
     app: AppHandle,
     state: State<'_, AppState>,
     version: String,
+    delete_previous: Option<bool>,
 ) -> Result<InstalledEngine, Error> {
     let events: EventSink = Arc::new(move |event: InstallEvent| {
         if let Err(error) = app.emit(events::ENGINE_INSTALL, &event) {
@@ -142,7 +145,13 @@ pub async fn install_engine(
     tracing::info!(version, "installing engine");
     state
         .engines
-        .install(&version, events)
+        .install(
+            &version,
+            InstallOptions {
+                delete_previous: delete_previous.unwrap_or(false),
+            },
+            events,
+        )
         .await
         .inspect(|engine| tracing::info!(version = %engine.version, "engine installed"))
         .inspect_err(|error| tracing::warn!(%error, version, "engine installation did not finish"))

@@ -49,6 +49,16 @@ impl EnginePaths {
         self.root.join("engines").join(".staging")
     }
 
+    /// Partial or complete download of one incremental-update file (a manifest or a delta
+    /// package). The name is its SHA-256, so equal names mean equal bytes. `sha256` must be
+    /// validated.
+    #[must_use]
+    pub fn delta_file(&self, sha256: &str) -> PathBuf {
+        self.root
+            .join("downloads")
+            .join(format!("delta-{sha256}.part"))
+    }
+
     /// Partial or complete download of one artifact. The checksum is part of the name, so a
     /// re-published build never resumes on top of the old bytes. `sha256` must be validated.
     #[must_use]

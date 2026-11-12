@@ -1,7 +1,13 @@
 import { createContext } from "react";
 import type { Release } from "@Coreverse-Game-Engine/db-client";
 
-import type { InstalledEngine, LauncherError, PlatformInfo, InstallStatus } from "@/lib/tauri";
+import type {
+    InstalledEngine,
+    InstallOptions,
+    LauncherError,
+    PlatformInfo,
+    InstallStatus,
+} from "@/lib/tauri";
 
 /** `unconfigured`: no Coreverse DB connection; `offline`: the server could not be reached. */
 export type UpdateCheck = "checking" | "ready" | "offline" | "error" | "unconfigured";
@@ -18,7 +24,7 @@ export interface EnginesContextValue {
     error: LauncherError | null;
     dismissError: () => void;
     checkForUpdates: () => Promise<void>;
-    install: (version: string) => Promise<void>;
+    install: (version: string, options?: InstallOptions) => Promise<void>;
     cancelInstall: () => Promise<void>;
     uninstall: (version: string) => Promise<void>;
 }

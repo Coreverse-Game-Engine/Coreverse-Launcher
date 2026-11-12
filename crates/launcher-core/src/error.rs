@@ -87,6 +87,9 @@ pub enum Error {
     #[error("this installation cannot update itself")]
     UpdateNotSupported,
 
+    #[error("the incremental update could not be applied: {0}")]
+    Delta(String),
+
     #[error("the update failed: {0}")]
     Update(String),
 
@@ -122,6 +125,7 @@ impl Error {
             Self::ChecksumMismatch => "checksum_mismatch",
             Self::SizeMismatch { .. } => "size_mismatch",
             Self::UpdateNotSupported => "update_not_supported",
+            Self::Delta(_) => "delta_failed",
             Self::Update(_) => "update_failed",
             Self::NoPendingUpdate => "no_pending_update",
         }

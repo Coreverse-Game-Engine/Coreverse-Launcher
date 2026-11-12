@@ -10,7 +10,13 @@ use serde::Serialize;
 #[serde(rename_all = "lowercase")]
 pub enum InstallPhase {
     Preparing,
+    /// Asking Coreverse DB how to get from the installed version to the new one.
+    Planning,
     Downloading,
+    /// Copying the installed version (incremental installs only).
+    Copying,
+    /// Applying delta packages to the copy (incremental installs only).
+    Patching,
     Verifying,
     Extracting,
     Finalizing,

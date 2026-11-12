@@ -5,7 +5,8 @@ use std::{
 };
 
 use super::{
-    download,
+    InstallOptions, delta,
+    download::{self, ProgressSpan},
     extract::{self, ArchiveFormat},
     metadata::{self, ArtifactMetadata},
     progress::{InstallPhase, Reporter},
@@ -37,12 +38,19 @@ fn check_cancelled(cancel: &AtomicBool) -> Result<()> {
 
 /// Installs `requested` for the current platform and returns the stored record.
 ///
+/// When an older version of the engine is already installed the launcher first tries an
+/// incremental update (copy that version and apply small delta packages, see [`delta`]); if
+/// Coreverse DB has no suitable plan, or anything about the update fails, it downloads the full
+/// build as usual. With `options.delete_previous` the older version is removed after a
+/// successful install, whichever way the new one was obtained.
+///
 /// A cancelled or failed install leaves no half-unpacked folder behind. The downloaded archive
 /// stays on disk after a cancellation or a network failure so the next attempt can resume it;
 /// it is deleted after success and after a checksum mismatch.
 pub async fn install(
     ctx: &InstallContext,
     requested: &str,
+    options: InstallOptions,
     cancel: &Arc<AtomicBool>,
     reporter: &Arc<Reporter>,
 ) -> Result<InstalledEngine> {
@@ -58,12 +66,39 @@ pub async fn install(
         ))
     })?;
 
+    // The newest older version that is installed: where an incremental update starts, and what
+    // "delete the old version" removes.
+    let previous = delta::choose_base(&store::list(&ctx.db)?, &version, platform, |installed| {
+        ctx.paths.install_dir(installed).is_dir()
+    });
+
     reporter.phase(InstallPhase::Preparing, 0, 0);
     let release = metadata::fetch_release(&ctx.http, &ctx.api_base_url, &version).await?;
     check_cancelled(cancel)?;
     let artifact = metadata::select_artifact(&release, platform)?.clone();
     let validated = metadata::validate_artifact(&artifact)?;
     let part = ctx.paths.part_file(&version, platform, &artifact.sha256);
+
+    let delta_tree = match &previous {
+        Some(base) => try_delta(ctx, base, &version, platform, cancel, reporter).await?,
+        None => None,
+    };
+    if let Some(tree) = delta_tree {
+        let job = DeltaJob {
+            paths: ctx.paths.clone(),
+            db: ctx.db.clone(),
+            version,
+            status: release.status,
+            artifact,
+            platform,
+            tree,
+            reporter: Arc::clone(reporter),
+        };
+        let installed = tokio::task::spawn_blocking(move || register_delta(&job))
+            .await
+            .map_err(join_error)??;
+        return Ok(finish(ctx, installed, previous.as_ref(), options).await);
+    }
 
     download::download(
         &ctx.http,
@@ -72,6 +107,10 @@ pub async fn install(
         artifact.size_bytes,
         cancel,
         reporter,
+        ProgressSpan {
+            base: 0,
+            total: artifact.size_bytes,
+        },
     )
     .await?;
 
@@ -106,9 +145,125 @@ pub async fn install(
         cancel: Arc::clone(cancel),
         reporter: Arc::clone(reporter),
     };
-    tokio::task::spawn_blocking(move || unpack_and_register(&job))
+    let installed = tokio::task::spawn_blocking(move || unpack_and_register(&job))
         .await
-        .map_err(join_error)?
+        .map_err(join_error)??;
+    Ok(finish(ctx, installed, previous.as_ref(), options).await)
+}
+
+/// Attempts an incremental update from `base`. A failure is not an error of the install: it is
+/// logged and the caller downloads the full build. Only cancellation ends the install.
+async fn try_delta(
+    ctx: &InstallContext,
+    base: &InstalledEngine,
+    version: &str,
+    platform: Platform,
+    cancel: &Arc<AtomicBool>,
+    reporter: &Arc<Reporter>,
+) -> Result<Option<delta::BuiltTree>> {
+    let request = delta::DeltaRequest {
+        http: &ctx.http,
+        api_base_url: &ctx.api_base_url,
+        paths: &ctx.paths,
+        platform,
+        base,
+        target: version,
+    };
+    match delta::build(&request, cancel, reporter).await {
+        Ok(tree) => Ok(tree),
+        Err(Error::Cancelled) => Err(Error::Cancelled),
+        Err(error) => {
+            tracing::warn!(
+                %error,
+                from = %base.version,
+                to = %version,
+                "the incremental update failed, downloading the full build instead"
+            );
+            Ok(None)
+        }
+    }
+}
+
+/// Runs after a successful install: removes the previous version when the user asked for it. A
+/// failure to remove it never fails the install.
+async fn finish(
+    ctx: &InstallContext,
+    installed: InstalledEngine,
+    previous: Option<&InstalledEngine>,
+    options: InstallOptions,
+) -> InstalledEngine {
+    if let (true, Some(previous)) = (options.delete_previous, previous) {
+        let paths = ctx.paths.clone();
+        let db = ctx.db.clone();
+        let version = previous.version.clone();
+        let removed =
+            tokio::task::spawn_blocking(move || remove_previous(&paths, &db, &version)).await;
+        if let Err(error) = removed {
+            tracing::warn!(%error, "removing the previous engine version was interrupted");
+        }
+    }
+    installed
+}
+
+fn remove_previous(paths: &EnginePaths, db: &Database, version: &str) {
+    match fs::remove_dir_all(paths.install_dir(version)) {
+        Ok(()) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) => {
+            tracing::warn!(%error, %version, "could not remove the previous engine version");
+            return;
+        }
+    }
+    if let Err(error) = store::delete(db, version) {
+        tracing::warn!(%error, %version, "could not forget the previous engine version");
+    }
+}
+
+struct DeltaJob {
+    paths: EnginePaths,
+    db: Database,
+    version: String,
+    status: String,
+    artifact: ArtifactMetadata,
+    platform: Platform,
+    tree: delta::BuiltTree,
+    reporter: Arc<Reporter>,
+}
+
+fn register_delta(job: &DeltaJob) -> Result<InstalledEngine> {
+    job.reporter.phase(InstallPhase::Finalizing, 0, 0);
+    let final_dir = job.paths.install_dir(&job.version);
+    replace_dir(&job.tree.root(), &final_dir)?;
+    // The record carries the full build's hash and size, like a normal install.
+    record_install(
+        &job.db,
+        &final_dir,
+        &InstalledEngine {
+            version: job.version.clone(),
+            status: job.status.clone(),
+            os: job.platform.os.to_owned(),
+            architecture: job.platform.architecture.to_owned(),
+            sha256: job.artifact.sha256.clone(),
+            size_bytes: job.artifact.size_bytes,
+            installed_at: String::new(),
+        },
+    )
+}
+
+/// Stores the record of a folder that is already in place; takes the folder away again when
+/// storing fails so no engine exists without a record.
+fn record_install(
+    db: &Database,
+    final_dir: &Path,
+    record: &InstalledEngine,
+) -> Result<InstalledEngine> {
+    match store::insert(db, record) {
+        Ok(stored) => Ok(stored),
+        Err(error) => {
+            let _ = fs::remove_dir_all(final_dir);
+            Err(error)
+        }
+    }
 }
 
 struct UnpackJob {
@@ -155,13 +310,7 @@ fn unpack_and_register(job: &UnpackJob) -> Result<InstalledEngine> {
         size_bytes: job.artifact.size_bytes,
         installed_at: String::new(),
     };
-    let stored = match store::insert(&job.db, &record) {
-        Ok(stored) => stored,
-        Err(error) => {
-            let _ = fs::remove_dir_all(&final_dir);
-            return Err(error);
-        }
-    };
+    let stored = record_install(&job.db, &final_dir, &record)?;
     let _ = fs::remove_file(&job.part);
     Ok(stored)
 }

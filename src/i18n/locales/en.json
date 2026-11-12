@@ -48,6 +48,7 @@
         "releasedOn": "Released on {{date}}",
         "install": "Install {{version}}",
         "upToDate": "The latest version is installed.",
+        "deletePrevious": "Delete the old version ({{version}}) after installing",
         "noBuildForPlatform": "This release has no build for {{os}} ({{architecture}}) yet.",
         "installedTitle": "Installed",
         "installedOn": "Installed on {{date}}",
@@ -58,7 +59,10 @@
         "dismiss": "Dismiss",
         "phase": {
             "preparing": "Preparing…",
+            "planning": "Checking for a faster update…",
             "downloading": "Downloading",
+            "copying": "Copying the installed version",
+            "patching": "Applying the update",
             "verifying": "Verifying the download",
             "extracting": "Unpacking",
             "finalizing": "Finishing up…"

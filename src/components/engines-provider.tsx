@@ -13,6 +13,7 @@ import {
     getInstallStatus,
     getPlatform,
     installEngine,
+    type InstallOptions,
     isLauncherError,
     listInstalledEngines,
     onInstallEvent,
@@ -132,11 +133,11 @@ export function EnginesProvider({ children }: { children: ReactNode }) {
     }, [checkForUpdates, refreshInstalled]);
 
     const install = useCallback(
-        async (version: string) => {
+        async (version: string, options?: InstallOptions) => {
             setError(null);
             setProgress({ version, phase: "preparing", done: 0, total: 0 });
             try {
-                await installEngine(version);
+                await installEngine(version, options);
             } catch (caught) {
                 const launcherError = toLauncherError(caught);
                 // Cancelling is not a failure.
