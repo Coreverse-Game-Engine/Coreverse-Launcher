@@ -2,4 +2,4 @@
 allowBuilds:
     esbuild: true
 minimumReleaseAgeExclude:
-  - '@Coreverse-Game-Engine/db-client@0.6.0'
+    - "@Coreverse-Game-Engine/db-client@0.6.0"

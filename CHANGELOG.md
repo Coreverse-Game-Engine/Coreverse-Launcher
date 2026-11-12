@@ -5,6 +5,8 @@ All notable changes to Coreverse Launcher are written down here. The format foll
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-12
+
 ### Added
 
 - Incremental engine updates. When an older engine version is installed, the launcher asks
@@ -24,3 +26,6 @@ All notable changes to Coreverse Launcher are written down here. The format foll
 
 - Installer images
 - DB configuration in release builds.
+
+[Unreleased]: https://github.com/Coreverse-Game-Engine/Coreverse-Launcher/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Coreverse-Game-Engine/Coreverse-Launcher/compare/v0.1.1...v0.2.0
