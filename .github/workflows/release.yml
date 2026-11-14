@@ -264,7 +264,7 @@ jobs:
                   # Without this v5 turns caching on by itself (packageManager is set) and needs pnpm already.
                   package-manager-cache: false
             - run: sudo apt-get update && sudo apt-get install -y msitools
-            - uses: actions/download-artifact@v4
+            - uses: actions/download-artifact@v8
               with:
                   pattern: assets-*
                   path: release-assets

@@ -52,7 +52,7 @@ jobs:
         env:
             TAP_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
         steps:
-            - uses: actions/download-artifact@v4
+            - uses: actions/download-artifact@v8
               if: ${{ env.TAP_TOKEN != '' }}
               with:
                   name: package-manifests
@@ -81,7 +81,7 @@ jobs:
         env:
             BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
         steps:
-            - uses: actions/download-artifact@v4
+            - uses: actions/download-artifact@v8
               if: ${{ env.BUCKET_TOKEN != '' }}
               with:
                   name: package-manifests
@@ -110,7 +110,7 @@ jobs:
         env:
             AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
         steps:
-            - uses: actions/download-artifact@v4
+            - uses: actions/download-artifact@v8
               if: ${{ env.AUR_SSH_PRIVATE_KEY != '' }}
               with:
                   name: package-manifests
