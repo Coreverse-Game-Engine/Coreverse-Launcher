@@ -110,7 +110,7 @@ jobs:
                   bash scripts/package/repack-linux.sh --deb "$deb" --format rpm --out release-assets
                   bash scripts/package/repack-linux.sh --deb "$deb" --format pacman --out release-assets
 
-            - uses: actions/upload-artifact@v4
+            - uses: actions/upload-artifact@v7
               with:
                   name: assets-linux-${{ matrix.arch }}
                   path: release-assets/*
@@ -180,7 +180,7 @@ jobs:
                   $version = "${{ needs.verify.outputs.version }}"
                   Compress-Archive -Path "target/${{ matrix.target }}/release/coreverse-launcher.exe", "LICENSE" -DestinationPath "release-assets/Coreverse-Launcher_${version}_windows_${{ matrix.arch }}.zip"
 
-            - uses: actions/upload-artifact@v4
+            - uses: actions/upload-artifact@v7
               with:
                   name: assets-windows-${{ matrix.arch }}
                   path: release-assets/*
@@ -239,7 +239,7 @@ jobs:
                       --version "${{ needs.verify.outputs.version }}" \
                       --out "release-assets/Coreverse-Launcher_${{ needs.verify.outputs.version }}_macos_${{ matrix.arch }}.pkg"
 
-            - uses: actions/upload-artifact@v4
+            - uses: actions/upload-artifact@v7
               with:
                   name: assets-macos-${{ matrix.arch }}
                   path: release-assets/*
@@ -280,7 +280,7 @@ jobs:
                   gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" \
                       --armor --detach-sign --output release-meta/SHA256SUMS.asc release-meta/SHA256SUMS
 
-            - uses: actions/upload-artifact@v4
+            - uses: actions/upload-artifact@v7
               with:
                   name: release-meta
                   path: release-meta
