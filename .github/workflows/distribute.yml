@@ -40,7 +40,7 @@ jobs:
                   mkdir assets-only
                   for file in assets/Coreverse-Launcher_*; do cp "$file" assets-only/; done
                   node scripts/release/make-release.mjs --assets assets-only --tag "$TAG" --out meta
-            - uses: actions/upload-artifact@v4
+            - uses: actions/upload-artifact@v7
               with:
                   name: package-manifests
                   path: meta/manifests
